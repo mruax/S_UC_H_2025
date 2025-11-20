@@ -11,4 +11,6 @@ urlpatterns = [
     path('trajectory/<int:trajectory_id>/', views.trajectory_view, name='trajectory'),
     path('trajectory/create/', views.create_trajectory, name='create_trajectory'),
     path('api/courses/', views.api_courses, name='api_courses'),
+    path('course/<int:course_id>/', views.course_view, name='course'),
+    path('trajectory/<int:trajectory_id>/delete/', views.delete_trajectory, name='delete_trajectory'),
 ]

@@ -12,13 +12,13 @@
     <div>
         <h2>Визуализация курсов</h2>
         <div id="canvas-container" style="width: 100%; height: 600px; border: 1px solid #d2d2d7; border-radius: 12px; position: relative; overflow: hidden;">
-            <div id="course-info" style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px; display: none; max-width: 300px; border: 1px solid #d2d2d7;">
-                <h3 id="course-title" style="font-size: 16px; margin-bottom: 5px;"></h3>
-                <p id="course-category" style="font-size: 12px; color: #86868b;"></p>
+            <div id="course-tooltip" style="position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 100; max-width: 200px; text-align: center;">
+                <div id="tooltip-title" style="font-weight: 600; margin-bottom: 2px;"></div>
+                <div id="tooltip-category" style="font-size: 10px; opacity: 0.8;"></div>
             </div>
         </div>
         <p style="font-size: 12px; color: #86868b; margin-top: 10px;">
-            Используйте мышь для вращения сферы. Нажмите на курс для подробностей.
+            Используйте мышь для вращения сферы. Наведите на курс для информации, нажмите для перехода к обучению.
         </p>
     </div>
     
@@ -51,12 +51,14 @@
 <h2>Последние курсы</h2>
 <div class="grid">
     {% for course in courses|slice:":6" %}
-    <div class="card">
-        <h3 style="font-size: 18px; margin-bottom: 8px;">{{ course.title }}</h3>
-        <p style="font-size: 12px; color: #86868b; margin-bottom: 8px;">{{ course.category }}</p>
-        <p style="font-size: 14px; margin-bottom: 15px;">{{ course.description|truncatewords:15 }}</p>
-        <p style="font-size: 12px; color: #86868b;">{{ course.duration_hours }} часов</p>
-    </div>
+    <a href="{% url 'course' course.id %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="cursor: pointer; transition: transform 0.2s;">
+            <h3 style="font-size: 18px; margin-bottom: 8px;">{{ course.title }}</h3>
+            <p style="font-size: 12px; color: #86868b; margin-bottom: 8px;">{{ course.category }}</p>
+            <p style="font-size: 14px; margin-bottom: 15px;">{{ course.description|truncatewords:15 }}</p>
+            <p style="font-size: 12px; color: #86868b;">{{ course.duration_hours }} часов</p>
+        </div>
+    </a>
     {% endfor %}
 </div>
 {% endblock %}
@@ -100,6 +102,25 @@
                 
                 sphere.position.set(course.x, course.y, course.z);
                 sphere.userData = course;
+                sphere.cursor = 'pointer';
+                
+                // Добавляем текст над шаром
+                const textCanvas = document.createElement('canvas');
+                const context = textCanvas.getContext('2d');
+                textCanvas.width = 256;
+                textCanvas.height = 64;
+                context.fillStyle = '#000000';
+                context.font = '12px Arial';
+                context.textAlign = 'center';
+                context.fillText(course.title, 128, 32);
+                
+                const texture = new THREE.CanvasTexture(textCanvas);
+                const textMaterial = new THREE.SpriteMaterial({ map: texture });
+                const textSprite = new THREE.Sprite(textMaterial);
+                textSprite.scale.set(2, 0.5, 1);
+                textSprite.position.set(0, 0.6, 0); // Позиция над шаром
+                sphere.add(textSprite);
+                
                 scene.add(sphere);
                 courseSpheres.push(sphere);
                 courseData.push(course);
@@ -129,11 +150,34 @@
         isDragging = false;
     });
     
-    // Клик на курс
+    // Подсказка при наведении
+    const tooltip = document.getElementById('course-tooltip');
+    const tooltipTitle = document.getElementById('tooltip-title');
+    const tooltipCategory = document.getElementById('tooltip-category');
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    const courseInfo = document.getElementById('course-info');
     
+    container.addEventListener('mousemove', (event) => {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(courseSpheres);
+        
+        if (intersects.length > 0) {
+            const course = intersects[0].object.userData;
+            tooltipTitle.textContent = course.title;
+            tooltipCategory.textContent = course.category;
+            tooltip.style.opacity = '1';
+            tooltip.style.left = (event.clientX - rect.left + 10) + 'px';
+            tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+        } else {
+            tooltip.style.opacity = '0';
+        }
+    });
+    
+    // Клик на курс - переход на страницу курса
     container.addEventListener('click', (event) => {
         const rect = container.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -144,11 +188,7 @@
         
         if (intersects.length > 0) {
             const course = intersects[0].object.userData;
-            document.getElementById('course-title').textContent = course.title;
-            document.getElementById('course-category').textContent = course.category;
-            courseInfo.style.display = 'block';
-        } else {
-            courseInfo.style.display = 'none';
+            window.location.href = `/course/${course.id}/`;
         }
     });
     

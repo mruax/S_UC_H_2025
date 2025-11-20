@@ -3,6 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.http import HttpResponseForbidden
 from .models import User, Course, Trajectory, TrajectoryCourse, StudentProgress
 import math
 
@@ -138,3 +139,34 @@ def create_trajectory(request):
     
     courses = Course.objects.all()
     return render(request, 'create_trajectory.html', {'courses': courses})
+
+@login_required
+def course_view(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Получаем или создаем прогресс пользователя для этого курса
+    progress, created = StudentProgress.objects.get_or_create(
+        student=request.user,
+        course=course,
+        defaults={'progress_percent': 0, 'completed': False}
+    )
+    
+    context = {
+        'course': course,
+        'progress': progress,
+    }
+    return render(request, 'course.html', context)
+
+@login_required
+def delete_trajectory(request, trajectory_id):
+    trajectory = get_object_or_404(Trajectory, id=trajectory_id)
+    
+    # Проверяем, что пользователь может удалять только свои траектории
+    if trajectory.student != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("Вы не можете удалить эту траекторию")
+    
+    if request.method == 'POST':
+        trajectory.delete()
+        return redirect('trajectory_list')
+    
+    return redirect('trajectory_list')
