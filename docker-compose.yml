@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: eduplatform
+      POSTGRES_USER: eduuser
+      POSTGRES_PASSWORD: edupass123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: sh -c "python manage.py makemigrations core && python manage.py migrate && python manage.py create_demo_data && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      POSTGRES_DB: eduplatform
+      POSTGRES_USER: eduuser
+      POSTGRES_PASSWORD: edupass123
+      DB_HOST: db
+      DB_PORT: 5432
+
+volumes:
+  postgres_data:

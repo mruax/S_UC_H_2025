@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<h1>Добро пожаловать, {{ user.username }}</h1>
+<p style="font-size: 18px; color: #86868b; margin-bottom: 40px;">
+    Роль: {% if user.role == 'student' %}Студент{% elif user.role == 'teacher' %}Преподаватель{% else %}Администратор{% endif %}
+</p>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-bottom: 40px;">
+    <div>
+        <h2>Визуализация курсов</h2>
+        <div id="canvas-container" style="width: 100%; height: 600px; border: 1px solid #d2d2d7; border-radius: 12px; position: relative; overflow: hidden;">
+            <div id="course-info" style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px; display: none; max-width: 300px; border: 1px solid #d2d2d7;">
+                <h3 id="course-title" style="font-size: 16px; margin-bottom: 5px;"></h3>
+                <p id="course-category" style="font-size: 12px; color: #86868b;"></p>
+            </div>
+        </div>
+        <p style="font-size: 12px; color: #86868b; margin-top: 10px;">
+            Используйте мышь для вращения сферы. Нажмите на курс для подробностей.
+        </p>
+    </div>
+    
+    <div>
+        <h2>Статистика</h2>
+        <div class="card">
+            <p style="font-size: 14px; color: #86868b; margin-bottom: 10px;">Всего курсов</p>
+            <p style="font-size: 36px; font-weight: 600;">{{ courses.count }}</p>
+        </div>
+        
+        <div class="card">
+            <p style="font-size: 14px; color: #86868b; margin-bottom: 10px;">Ваши траектории</p>
+            <p style="font-size: 36px; font-weight: 600;">{{ trajectories.count }}</p>
+        </div>
+        
+        <div class="card">
+            <p style="font-size: 14px; color: #86868b; margin-bottom: 10px;">Прогресс</p>
+            <p style="font-size: 36px; font-weight: 600;">{{ progress.count }}</p>
+        </div>
+        
+        <a href="{% url 'courses' %}" class="btn" style="width: 100%; text-align: center; margin-top: 10px;">
+            Все курсы
+        </a>
+        <a href="{% url 'create_trajectory' %}" class="btn btn-outline" style="width: 100%; text-align: center; margin-top: 10px; display: block;">
+            Создать траекторию
+        </a>
+    </div>
+</div>
+
+<h2>Последние курсы</h2>
+<div class="grid">
+    {% for course in courses|slice:":6" %}
+    <div class="card">
+        <h3 style="font-size: 18px; margin-bottom: 8px;">{{ course.title }}</h3>
+        <p style="font-size: 12px; color: #86868b; margin-bottom: 8px;">{{ course.category }}</p>
+        <p style="font-size: 14px; margin-bottom: 15px;">{{ course.description|truncatewords:15 }}</p>
+        <p style="font-size: 12px; color: #86868b;">{{ course.duration_hours }} часов</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setClearColor(0xffffff, 1);
+    container.appendChild(renderer.domElement);
+    
+    camera.position.z = 12;
+    
+    // Освещение
+    const ambientLight = new THREE.AmbientLight(0x404040, 2);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+    
+    // Загрузка курсов
+    const courseSpheres = [];
+    const courseData = [];
+    
+    fetch('/api/courses/')
+        .then(res => res.json())
+        .then(data => {
+            data.courses.forEach(course => {
+                const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: 0x000000,
+                    metalness: 0.3,
+                    roughness: 0.7
+                });
+                const sphere = new THREE.Mesh(geometry, material);
+                
+                sphere.position.set(course.x, course.y, course.z);
+                sphere.userData = course;
+                scene.add(sphere);
+                courseSpheres.push(sphere);
+                courseData.push(course);
+            });
+        });
+    
+    // Вращение мышью
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    
+    container.addEventListener('mousedown', (e) => {
+        isDragging = true;
+    });
+    
+    container.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const deltaX = e.clientX - previousMousePosition.x;
+            const deltaY = e.clientY - previousMousePosition.y;
+            
+            scene.rotation.y += deltaX * 0.01;
+            scene.rotation.x += deltaY * 0.01;
+        }
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+    
+    container.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+    
+    // Клик на курс
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const courseInfo = document.getElementById('course-info');
+    
+    container.addEventListener('click', (event) => {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(courseSpheres);
+        
+        if (intersects.length > 0) {
+            const course = intersects[0].object.userData;
+            document.getElementById('course-title').textContent = course.title;
+            document.getElementById('course-category').textContent = course.category;
+            courseInfo.style.display = 'block';
+        } else {
+            courseInfo.style.display = 'none';
+        }
+    });
+    
+    // Анимация
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        // Медленное автовращение
+        if (!isDragging) {
+            scene.rotation.y += 0.002;
+        }
+        
+        renderer.render(scene, camera);
+    }
+    animate();
+    
+    // Resize
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+</script>
+{% endblock %}

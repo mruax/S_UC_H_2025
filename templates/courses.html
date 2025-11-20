@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Курсы{% endblock %}
+
+{% block content %}
+<h1>Все курсы</h1>
+<p style="font-size: 18px; color: #86868b; margin-bottom: 40px;">
+    Интеграция с Moodle • {{ courses.paginator.count }} курсов
+</p>
+
+<div class="grid">
+    {% for course in courses %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+            <h3 style="font-size: 18px; margin: 0;">{{ course.title }}</h3>
+            <span style="font-size: 10px; background: #000; color: #fff; padding: 4px 8px; border-radius: 4px;">
+                {{ course.difficulty }}
+            </span>
+        </div>
+        <p style="font-size: 12px; color: #86868b; margin-bottom: 12px;">{{ course.category }}</p>
+        <p style="font-size: 14px; margin-bottom: 15px;">{{ course.description }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <p style="font-size: 12px; color: #86868b;">{{ course.duration_hours }} часов</p>
+            <p style="font-size: 10px; color: #86868b;">{{ course.moodle_id }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 40px;">
+    {% if courses.has_previous %}
+        <a href="?page=1" class="btn btn-outline">Первая</a>
+        <a href="?page={{ courses.previous_page_number }}" class="btn btn-outline">Назад</a>
+    {% endif %}
+    
+    <span style="font-size: 14px;">
+        Страница {{ courses.number }} из {{ courses.paginator.num_pages }}
+    </span>
+    
+    {% if courses.has_next %}
+        <a href="?page={{ courses.next_page_number }}" class="btn btn-outline">Вперед</a>
+        <a href="?page={{ courses.paginator.num_pages }}" class="btn btn-outline">Последняя</a>
+    {% endif %}
+</div>
+{% endblock %}

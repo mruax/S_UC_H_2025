@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Создать траекторию{% endblock %}
+
+{% block content %}
+<h1>Создать траекторию обучения</h1>
+<p style="font-size: 18px; color: #86868b; margin-bottom: 40px;">
+    Выберите курсы для персональной траектории обучения
+</p>
+
+<form method="post" style="max-width: 800px;">
+    {% csrf_token %}
+    
+    <div style="margin-bottom: 30px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500;">
+            Название траектории
+        </label>
+        <input type="text" name="name" placeholder="Например: Python Backend Developer" required>
+    </div>
+    
+    <div style="margin-bottom: 30px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500;">
+            Тип траектории
+        </label>
+        <select name="trajectory_type" required>
+            <option value="personal">Личная траектория</option>
+            <option value="teacher">Траектория от преподавателя</option>
+        </select>
+    </div>
+    
+    <div style="margin-bottom: 30px;">
+        <label style="display: block; margin-bottom: 15px; font-size: 14px; font-weight: 500;">
+            Выберите курсы (в порядке прохождения)
+        </label>
+        
+        <div id="selected-courses" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <!-- Selected courses will appear here -->
+        </div>
+        
+        <div style="border: 1px solid #d2d2d7; border-radius: 8px; max-height: 400px; overflow-y: auto;">
+            {% for course in courses %}
+            <div class="course-option" data-course-id="{{ course.id }}" data-course-title="{{ course.title }}" data-course-category="{{ course.category }}" style="padding: 15px; border-bottom: 1px solid #f5f5f7; cursor: pointer; transition: background 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="font-size: 14px; margin-bottom: 4px;">{{ course.title }}</h3>
+                        <p style="font-size: 12px; color: #86868b;">{{ course.category }} • {{ course.duration_hours }} часов</p>
+                    </div>
+                    <span class="add-icon" style="font-size: 20px; color: #86868b;">+</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <button type="submit" class="btn" style="width: 100%;">
+        Создать траекторию
+    </button>
+</form>
+
+<script>
+    const selectedCourses = new Set();
+    const selectedCoursesContainer = document.getElementById('selected-courses');
+    
+    document.querySelectorAll('.course-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const courseId = this.dataset.courseId;
+            const courseTitle = this.dataset.courseTitle;
+            const courseCategory = this.dataset.courseCategory;
+            
+            if (selectedCourses.has(courseId)) {
+                selectedCourses.delete(courseId);
+                document.getElementById('selected-' + courseId).remove();
+                this.style.background = '#fff';
+                this.querySelector('.add-icon').textContent = '+';
+            } else {
+                selectedCourses.add(courseId);
+                this.style.background = '#f5f5f7';
+                this.querySelector('.add-icon').textContent = '✓';
+                
+                const selectedItem = document.createElement('div');
+                selectedItem.id = 'selected-' + courseId;
+                selectedItem.style.cssText = 'display: flex; align-items: center; gap: 15px; padding: 12px; background: #000; color: #fff; border-radius: 8px;';
+                selectedItem.innerHTML = `
+                    <span style="min-width: 30px; height: 30px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">${selectedCourses.size}</span>
+                    <div style="flex: 1;">
+                        <div style="font-size: 14px; font-weight: 500;">${courseTitle}</div>
+                        <div style="font-size: 11px; opacity: 0.7;">${courseCategory}</div>
+                    </div>
+                    <input type="hidden" name="courses" value="${courseId}">
+                `;
+                selectedCoursesContainer.appendChild(selectedItem);
+            }
+        });
+    });
+</script>
+{% endblock %}
