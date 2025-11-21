@@ -1,0 +1,6 @@
+services:
+  webserver:
+    environment:
+      MOODLE_DOCKER_BBB_MOCK: "true"
+  bbbmock:
+    image: moodlehq/bigbluebutton_mock

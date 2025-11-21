@@ -1,0 +1,6 @@
+services:
+  webserver:
+    environment:
+      MOODLE_DOCKER_MATRIX_MOCK: "true"
+  matrixmock:
+    image: moodlehq/matrixsynapse_mock
