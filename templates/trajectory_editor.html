@@ -60,19 +60,24 @@
         overflow: hidden;
         position: relative;
         background: #fafafa;
+        cursor: grab;
+    }
+    
+    .canvas-wrapper.panning {
+        cursor: grabbing;
     }
     
     .trajectory-canvas {
-        width: 3000px;
-        height: 800px;
-        position: relative;
+        width: 3200px;
+        height: 900px;
+        position: absolute;
         transform-origin: 0 0;
-        transition: transform 0.1s;
+        transition: transform 0.15s ease-out;
     }
     
     .semester-column {
         position: absolute;
-        width: 700px;
+        width: 800px;
         height: 100%;
         border-right: 2px solid #d2d2d7;
     }
@@ -87,28 +92,32 @@
         color: #fff;
         padding: 8px 16px;
         border-radius: 8px;
+        z-index: 10;
     }
     
     .drop-zone {
         position: absolute;
         width: 100%;
-        height: 33.33%;
         border: 2px dashed transparent;
         transition: all 0.2s;
+        min-height: 200px;
     }
     
     .drop-zone-top {
-        top: 0;
+        top: 60px;
+        height: 250px;
     }
     
     .drop-zone-center {
-        top: 33.33%;
+        top: 320px;
+        height: 250px;
         border-top: 3px solid #000;
         border-bottom: 3px solid #000;
     }
     
     .drop-zone-bottom {
-        top: 66.66%;
+        top: 580px;
+        height: 250px;
     }
     
     .drop-zone.drag-over {
@@ -118,13 +127,13 @@
     
     .center-line {
         position: absolute;
-        top: 50%;
+        top: 445px;
         left: 0;
         right: 0;
         height: 4px;
         background: #000;
-        transform: translateY(-2px);
         z-index: 1;
+        pointer-events: none;
     }
     
     .course-card {
@@ -240,72 +249,36 @@
                 
                 <div class="semester-column" style="left: 0px;">
                     <div class="semester-label">1 семестр</div>
-                    
-                    <div class="drop-zone drop-zone-top" 
-                         data-semester="1" 
-                         data-position="top"></div>
-                    
-                    <div class="drop-zone drop-zone-center" 
-                         data-semester="1" 
-                         data-position="center"></div>
-                    
-                    <div class="drop-zone drop-zone-bottom" 
-                         data-semester="1" 
-                         data-position="bottom"></div>
+                    <div class="drop-zone drop-zone-top" data-semester="1" data-position="top"></div>
+                    <div class="drop-zone drop-zone-center" data-semester="1" data-position="center"></div>
+                    <div class="drop-zone drop-zone-bottom" data-semester="1" data-position="bottom"></div>
                 </div>
                 
-                <div class="semester-column" style="left: 700px;">
+                <div class="semester-column" style="left: 800px;">
                     <div class="semester-label">2 семестр</div>
-                    
-                    <div class="drop-zone drop-zone-top" 
-                         data-semester="2" 
-                         data-position="top"></div>
-                    
-                    <div class="drop-zone drop-zone-center" 
-                         data-semester="2" 
-                         data-position="center"></div>
-                    
-                    <div class="drop-zone drop-zone-bottom" 
-                         data-semester="2" 
-                         data-position="bottom"></div>
+                    <div class="drop-zone drop-zone-top" data-semester="2" data-position="top"></div>
+                    <div class="drop-zone drop-zone-center" data-semester="2" data-position="center"></div>
+                    <div class="drop-zone drop-zone-bottom" data-semester="2" data-position="bottom"></div>
                 </div>
                 
-                <div class="semester-column" style="left: 1400px;">
+                <div class="semester-column" style="left: 1600px;">
                     <div class="semester-label">3 семестр</div>
-                    
-                    <div class="drop-zone drop-zone-top" 
-                         data-semester="3" 
-                         data-position="top"></div>
-                    
-                    <div class="drop-zone drop-zone-center" 
-                         data-semester="3" 
-                         data-position="center"></div>
-                    
-                    <div class="drop-zone drop-zone-bottom" 
-                         data-semester="3" 
-                         data-position="bottom"></div>
+                    <div class="drop-zone drop-zone-top" data-semester="3" data-position="top"></div>
+                    <div class="drop-zone drop-zone-center" data-semester="3" data-position="center"></div>
+                    <div class="drop-zone drop-zone-bottom" data-semester="3" data-position="bottom"></div>
                 </div>
                 
-                <div class="semester-column" style="left: 2100px;">
+                <div class="semester-column" style="left: 2400px;">
                     <div class="semester-label">4 семестр</div>
-                    
-                    <div class="drop-zone drop-zone-top" 
-                         data-semester="4" 
-                         data-position="top"></div>
-                    
-                    <div class="drop-zone drop-zone-center" 
-                         data-semester="4" 
-                         data-position="center"></div>
-                    
-                    <div class="drop-zone drop-zone-bottom" 
-                         data-semester="4" 
-                         data-position="bottom"></div>
+                    <div class="drop-zone drop-zone-top" data-semester="4" data-position="top"></div>
+                    <div class="drop-zone drop-zone-center" data-semester="4" data-position="center"></div>
+                    <div class="drop-zone drop-zone-bottom" data-semester="4" data-position="bottom"></div>
                 </div>
             </div>
             
             <div class="zoom-controls">
                 <button class="zoom-btn" id="zoom-out">-</button>
-                <button class="zoom-btn" id="zoom-reset">100%</button>
+                <button class="zoom-btn" id="zoom-reset">70%</button>
                 <button class="zoom-btn" id="zoom-in">+</button>
             </div>
         </div>
@@ -314,16 +287,14 @@
 
 <script>
 let courses = [];
-let zoom = 1;
-let pan = { x: 0, y: 0 };
+let zoom = 0.7;
+let pan = { x: 50, y: 50 };
 let isPanning = false;
 let startPan = { x: 0, y: 0 };
 
 const existingData = {{ existing_data|safe }};
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== Trajectory Editor Initialized ===');
-    
     initDragAndDrop();
     initZoomAndPan();
     initSearch();
@@ -333,12 +304,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (Object.keys(existingData).length > 0) {
         loadExistingCourses();
     }
+    
+    centerCanvas();
+    updateTransform();
 });
+
+function centerCanvas() {
+    const wrapper = document.getElementById('canvas-wrapper');
+    const wrapperRect = wrapper.getBoundingClientRect();
+    
+    pan.x = (wrapperRect.width - 3200 * zoom) / 2 + 100;
+    pan.y = (wrapperRect.height - 900 * zoom) / 2;
+}
 
 function initDragAndDrop() {
     const courseItems = document.querySelectorAll('.course-item');
-    console.log('Initializing drag and drop for', courseItems.length, 'courses');
-    
     courseItems.forEach(item => {
         item.addEventListener('dragstart', handleDragStart);
         item.addEventListener('dragend', handleDragEnd);
@@ -358,7 +338,6 @@ function handleDragStart(e) {
     e.dataTransfer.setData('courseId', e.target.dataset.courseId);
     e.dataTransfer.setData('courseTitle', e.target.dataset.courseTitle);
     e.dataTransfer.setData('courseCategory', e.target.dataset.courseCategory);
-    e.dataTransfer.setData('courseDescription', e.target.dataset.courseDescription);
 }
 
 function handleDragEnd(e) {
@@ -367,7 +346,6 @@ function handleDragEnd(e) {
 
 function handleDragOver(e) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
     e.currentTarget.classList.add('drag-over');
 }
 
@@ -382,12 +360,11 @@ function handleDrop(e) {
     const courseId = parseInt(e.dataTransfer.getData('courseId'));
     const courseTitle = e.dataTransfer.getData('courseTitle');
     const courseCategory = e.dataTransfer.getData('courseCategory');
-    const courseDescription = e.dataTransfer.getData('courseDescription');
     const semester = parseInt(e.currentTarget.dataset.semester);
     const position = e.currentTarget.dataset.position;
     
     if (courseExistsInTrajectory(courseId)) {
-        alert('Этот курс уже добавлен в траекторию');
+        alert('Этот курс уже добавлен');
         return;
     }
     
@@ -395,7 +372,6 @@ function handleDrop(e) {
         course_id: courseId,
         title: courseTitle,
         category: courseCategory,
-        description: courseDescription,
         semester: semester,
         position: position,
         order: getCoursesInZone(semester, position).length
@@ -403,8 +379,6 @@ function handleDrop(e) {
     
     courses.push(course);
     renderCourse(course);
-    
-    console.log('Added course:', courseTitle, 'to semester', semester, position);
 }
 
 function courseExistsInTrajectory(courseId) {
@@ -421,19 +395,22 @@ function renderCourse(course) {
     card.className = `course-card ${course.position !== 'center' ? 'optional' : ''}`;
     card.dataset.courseId = course.course_id;
     
-    const semesterOffset = (course.semester - 1) * 700;
-    const zoneOffset = course.order * 220;
+    const semesterOffset = (course.semester - 1) * 800;
+    const coursesInZone = getCoursesInZone(course.semester, course.position);
+    
+    // Расширяем зону горизонтально
+    const cardWidth = 200;
+    const gap = 20;
+    const totalWidth = coursesInZone.length * (cardWidth + gap);
+    const startX = semesterOffset + (800 - totalWidth) / 2;
+    const xPosition = startX + course.order * (cardWidth + gap);
     
     let yPosition;
-    if (course.position === 'top') {
-        yPosition = 50 + zoneOffset;
-    } else if (course.position === 'center') {
-        yPosition = 350 + zoneOffset;
-    } else {
-        yPosition = 550 + zoneOffset;
-    }
+    if (course.position === 'top') yPosition = 120;
+    else if (course.position === 'center') yPosition = 360;
+    else yPosition = 640;
     
-    card.style.left = `${semesterOffset + 50}px`;
+    card.style.left = `${xPosition}px`;
     card.style.top = `${yPosition}px`;
     
     card.innerHTML = `
@@ -447,20 +424,14 @@ function renderCourse(course) {
 
 function removeCourse(courseId) {
     courses = courses.filter(c => c.course_id !== courseId);
-    
-    const cards = document.querySelectorAll('.course-card');
-    cards.forEach(card => {
-        if (parseInt(card.dataset.courseId) === courseId) {
-            card.remove();
-        }
+    document.querySelectorAll('.course-card').forEach(card => {
+        if (parseInt(card.dataset.courseId) === courseId) card.remove();
     });
-    
     reorderCourses();
 }
 
 function reorderCourses() {
-    const cards = document.querySelectorAll('.course-card');
-    cards.forEach(card => card.remove());
+    document.querySelectorAll('.course-card').forEach(card => card.remove());
     
     const grouped = {};
     courses.forEach(course => {
@@ -478,8 +449,6 @@ function reorderCourses() {
 }
 
 function loadExistingCourses() {
-    console.log('Loading existing courses:', existingData);
-    
     Object.keys(existingData).forEach(key => {
         const [semester, position] = key.split('_');
         existingData[key].forEach((courseData, index) => {
@@ -487,7 +456,6 @@ function loadExistingCourses() {
                 course_id: courseData.course_id,
                 title: courseData.title,
                 category: courseData.category,
-                description: courseData.description || '',
                 semester: parseInt(semester),
                 position: position,
                 order: index
@@ -503,26 +471,44 @@ function initZoomAndPan() {
     const canvas = document.getElementById('trajectory-canvas');
     
     document.getElementById('zoom-in').addEventListener('click', () => {
-        zoom = Math.min(zoom + 0.1, 2);
+        const oldZoom = zoom;
+        zoom = Math.min(zoom + 0.1, 1.5);
+        
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const centerX = wrapperRect.width / 2;
+        const centerY = wrapperRect.height / 2;
+        
+        pan.x = centerX - (centerX - pan.x) * (zoom / oldZoom);
+        pan.y = centerY - (centerY - pan.y) * (zoom / oldZoom);
+        
         updateTransform();
     });
     
     document.getElementById('zoom-out').addEventListener('click', () => {
+        const oldZoom = zoom;
         zoom = Math.max(zoom - 0.1, 0.3);
+        
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const centerX = wrapperRect.width / 2;
+        const centerY = wrapperRect.height / 2;
+        
+        pan.x = centerX - (centerX - pan.x) * (zoom / oldZoom);
+        pan.y = centerY - (centerY - pan.y) * (zoom / oldZoom);
+        
         updateTransform();
     });
     
     document.getElementById('zoom-reset').addEventListener('click', () => {
-        zoom = 1;
-        pan = { x: 0, y: 0 };
+        zoom = 0.7;
+        centerCanvas();
         updateTransform();
     });
     
     wrapper.addEventListener('mousedown', (e) => {
-        if (e.target === wrapper || e.target === canvas) {
+        if (e.target === wrapper || e.target === canvas || e.target.classList.contains('drop-zone') || e.target.classList.contains('center-line')) {
             isPanning = true;
             startPan = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-            wrapper.style.cursor = 'grabbing';
+            wrapper.classList.add('panning');
         }
     });
     
@@ -534,17 +520,29 @@ function initZoomAndPan() {
         }
     });
     
-    wrapper.addEventListener('mouseup', () => {
-        isPanning = false;
-        wrapper.style.cursor = 'default';
+    document.addEventListener('mouseup', () => {
+        if (isPanning) {
+            isPanning = false;
+            wrapper.classList.remove('panning');
+        }
     });
     
     wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
+        
         const delta = e.deltaY > 0 ? -0.05 : 0.05;
-        zoom = Math.max(0.3, Math.min(2, zoom + delta));
+        const oldZoom = zoom;
+        zoom = Math.max(0.3, Math.min(1.5, zoom + delta));
+        
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        pan.x = mouseX - (mouseX - pan.x) * (zoom / oldZoom);
+        pan.y = mouseY - (mouseY - pan.y) * (zoom / oldZoom);
+        
         updateTransform();
-    });
+    }, { passive: false });
 }
 
 function updateTransform() {
@@ -554,12 +552,10 @@ function updateTransform() {
 }
 
 function initSearch() {
-    const searchInput = document.getElementById('search-courses');
-    searchInput.addEventListener('input', (e) => {
+    document.getElementById('search-courses').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase();
         document.querySelectorAll('.course-item').forEach(item => {
-            const title = item.dataset.courseTitle.toLowerCase();
-            item.style.display = title.includes(query) ? 'block' : 'none';
+            item.style.display = item.dataset.courseTitle.toLowerCase().includes(query) ? 'block' : 'none';
         });
     });
 }
@@ -567,23 +563,10 @@ function initSearch() {
 function saveTrajectory() {
     const name = document.getElementById('trajectory-name').value;
     
-    if (!name.trim()) {
-        alert('Введите название траектории');
+    if (!name.trim() || courses.length === 0) {
+        alert('Заполните название и добавьте курсы');
         return;
     }
-    
-    if (courses.length === 0) {
-        alert('Добавьте хотя бы один курс в траекторию');
-        return;
-    }
-    
-    const data = {
-        {% if trajectory %}
-        trajectory_id: {{ trajectory.id }},
-        {% endif %}
-        name: name,
-        courses: courses
-    };
     
     fetch('{% url "save_trajectory" %}', {
         method: 'POST',
@@ -591,18 +574,17 @@ function saveTrajectory() {
             'Content-Type': 'application/json',
             'X-CSRFToken': '{{ csrf_token }}'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+            {% if trajectory %}trajectory_id: {{ trajectory.id }},{% endif %}
+            name: name,
+            courses: courses
+        })
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-        if (data.success) {
-            window.location.href = `/trajectory/${data.trajectory_id}/`;
-        }
+        if (data.success) window.location.href = `/trajectory/${data.trajectory_id}/`;
     })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Ошибка при сохранении траектории');
-    });
+    .catch(() => alert('Ошибка сохранения'));
 }
 </script>
 {% endblock %}

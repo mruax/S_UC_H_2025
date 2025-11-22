@@ -2,8 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import JsonResponse
-from django.http import HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods
 from .models import User, Course, Trajectory, TrajectoryCourse, StudentProgress
 import json
@@ -81,21 +80,27 @@ def trajectory_view(request, trajectory_id=None):
         trajectory = get_object_or_404(Trajectory, id=trajectory_id, student=user)
         trajectory_courses = TrajectoryCourse.objects.filter(trajectory=trajectory).select_related('course')
         
-        courses_by_semester = {}
+        # Формируем JSON для JS
+        courses_json = []
         for tc in trajectory_courses:
-            if tc.semester not in courses_by_semester:
-                courses_by_semester[tc.semester] = {'center': [], 'top': [], 'bottom': []}
-            courses_by_semester[tc.semester][tc.position].append(tc)
+            courses_json.append({
+                'course_id': tc.course.id,
+                'title': tc.course.title,
+                'category': tc.course.category,
+                'semester': tc.semester,
+                'position': tc.position,
+                'order': tc.order
+            })
     else:
         trajectory = None
-        courses_by_semester = {}
+        courses_json = []
     
     all_trajectories = Trajectory.objects.filter(student=user, is_draft=False)
     
     context = {
         'user': user,
         'trajectory': trajectory,
-        'courses_by_semester': courses_by_semester,
+        'courses_json': json.dumps(courses_json),
         'all_trajectories': all_trajectories,
     }
     
@@ -129,7 +134,6 @@ def trajectory_editor_view(request, trajectory_id=None):
                 'course_id': tc.course.id,
                 'title': tc.course.title,
                 'category': tc.course.category,
-                'description': tc.course.description,
                 'order': tc.order
             })
     else:
