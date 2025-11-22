@@ -1,5 +1,286 @@
 {
   "skills_tree": {
+    "programming": {
+      "name": "Программирование",
+      "code": "programming",
+      "description": "Разработка программного обеспечения",
+      "children": {
+        "python": {
+          "name": "Python",
+          "code": "programming.python",
+          "description": "Язык программирования Python",
+          "children": {
+            "data_analysis": {
+              "name": "Анализ данных",
+              "code": "programming.python.data_analysis",
+              "description": "Pandas, NumPy для анализа данных"
+            },
+            "ml": {
+              "name": "Машинное обучение",
+              "code": "programming.python.ml",
+              "description": "Scikit-learn, TensorFlow, Keras"
+            },
+            "web": {
+              "name": "Веб-разработка",
+              "code": "programming.python.web",
+              "description": "Django, Flask, FastAPI"
+            },
+            "automation": {
+              "name": "Автоматизация",
+              "code": "programming.python.automation",
+              "description": "Скрипты и автоматизация задач"
+            }
+          }
+        },
+        "javascript": {
+          "name": "JavaScript",
+          "code": "programming.javascript",
+          "description": "Язык программирования JavaScript",
+          "children": {
+            "frontend": {
+              "name": "Frontend",
+              "code": "programming.javascript.frontend",
+              "description": "React, Vue, Angular"
+            },
+            "backend": {
+              "name": "Backend",
+              "code": "programming.javascript.backend",
+              "description": "Node.js, Express"
+            },
+            "mobile": {
+              "name": "Мобильная разработка",
+              "code": "programming.javascript.mobile",
+              "description": "React Native"
+            }
+          }
+        },
+        "java": {
+          "name": "Java",
+          "code": "programming.java",
+          "description": "Язык программирования Java",
+          "children": {
+            "enterprise": {
+              "name": "Enterprise разработка",
+              "code": "programming.java.enterprise",
+              "description": "Spring Framework"
+            },
+            "android": {
+              "name": "Android разработка",
+              "code": "programming.java.android",
+              "description": "Разработка под Android"
+            }
+          }
+        },
+        "web_development": {
+          "name": "Веб-разработка",
+          "code": "programming.web",
+          "description": "Создание веб-приложений",
+          "children": {
+            "html_css": {
+              "name": "HTML/CSS",
+              "code": "programming.web.html_css",
+              "description": "Верстка и стилизация"
+            },
+            "frontend_frameworks": {
+              "name": "Frontend фреймворки",
+              "code": "programming.web.frontend",
+              "description": "Современные фронтенд технологии"
+            },
+            "backend": {
+              "name": "Backend разработка",
+              "code": "programming.web.backend",
+              "description": "Серверная часть приложений"
+            },
+            "databases": {
+              "name": "Базы данных",
+              "code": "programming.web.databases",
+              "description": "SQL и NoSQL базы данных"
+            }
+          }
+        },
+        "mobile_development": {
+          "name": "Мобильная разработка",
+          "code": "programming.mobile",
+          "description": "Разработка мобильных приложений",
+          "children": {
+            "ios": {
+              "name": "iOS разработка",
+              "code": "programming.mobile.ios",
+              "description": "Swift, UIKit, SwiftUI"
+            },
+            "android": {
+              "name": "Android разработка",
+              "code": "programming.mobile.android",
+              "description": "Kotlin, Android SDK"
+            },
+            "cross_platform": {
+              "name": "Кросс-платформенная разработка",
+              "code": "programming.mobile.cross_platform",
+              "description": "Flutter, React Native"
+            }
+          }
+        },
+        "game_development": {
+          "name": "Разработка игр",
+          "code": "programming.games",
+          "description": "Создание видеоигр",
+          "children": {
+            "unity": {
+              "name": "Unity",
+              "code": "programming.games.unity",
+              "description": "Разработка на Unity"
+            },
+            "unreal": {
+              "name": "Unreal Engine",
+              "code": "programming.games.unreal",
+              "description": "Разработка на Unreal Engine"
+            },
+            "game_design": {
+              "name": "Геймдизайн",
+              "code": "programming.games.design",
+              "description": "Проектирование игровых механик"
+            }
+          }
+        },
+        "data_science": {
+          "name": "Data Science",
+          "code": "programming.data_science",
+          "description": "Наука о данных",
+          "children": {
+            "machine_learning": {
+              "name": "Машинное обучение",
+              "code": "programming.data_science.ml",
+              "description": "Алгоритмы ML и AI"
+            },
+            "deep_learning": {
+              "name": "Глубокое обучение",
+              "code": "programming.data_science.deep_learning",
+              "description": "Нейронные сети"
+            },
+            "computer_vision": {
+              "name": "Компьютерное зрение",
+              "code": "programming.data_science.vision",
+              "description": "Анализ и обработка изображений"
+            },
+            "nlp": {
+              "name": "Обработка естественного языка",
+              "code": "programming.data_science.nlp",
+              "description": "NLP и лингвистический анализ"
+            }
+          }
+        },
+        "devops": {
+          "name": "DevOps",
+          "code": "programming.devops",
+          "description": "Разработка и эксплуатация",
+          "children": {
+            "docker": {
+              "name": "Docker",
+              "code": "programming.devops.docker",
+              "description": "Контейнеризация приложений"
+            },
+            "kubernetes": {
+              "name": "Kubernetes",
+              "code": "programming.devops.kubernetes",
+              "description": "Оркестрация контейнеров"
+            },
+            "ci_cd": {
+              "name": "CI/CD",
+              "code": "programming.devops.ci_cd",
+              "description": "Непрерывная интеграция и доставка"
+            },
+            "monitoring": {
+              "name": "Мониторинг",
+              "code": "programming.devops.monitoring",
+              "description": "Мониторинг и логирование"
+            }
+          }
+        },
+        "cybersecurity": {
+          "name": "Кибербезопасность",
+          "code": "programming.security",
+          "description": "Информационная безопасность",
+          "children": {
+            "ethical_hacking": {
+              "name": "Этичный хакинг",
+              "code": "programming.security.ethical_hacking",
+              "description": "Тестирование на проникновение"
+            },
+            "web_security": {
+              "name": "Веб-безопасность",
+              "code": "programming.security.web",
+              "description": "Защита веб-приложений"
+            },
+            "network_security": {
+              "name": "Сетевая безопасность",
+              "code": "programming.security.network",
+              "description": "Защита сетевой инфраструктуры"
+            }
+          }
+        },
+        "blockchain": {
+          "name": "Блокчейн",
+          "code": "programming.blockchain",
+          "description": "Распределенные технологии",
+          "children": {
+            "smart_contracts": {
+              "name": "Смарт-контракты",
+              "code": "programming.blockchain.smart_contracts",
+              "description": "Solidity, разработка dApps"
+            },
+            "web3": {
+              "name": "Web3",
+              "code": "programming.blockchain.web3",
+              "description": "Децентрализованные приложения"
+            }
+          }
+        },
+        "testing": {
+          "name": "Тестирование ПО",
+          "code": "programming.testing",
+          "description": "QA и обеспечение качества",
+          "children": {
+            "manual_testing": {
+              "name": "Ручное тестирование",
+              "code": "programming.testing.manual",
+              "description": "Мануальное тестирование"
+            },
+            "automation_testing": {
+              "name": "Автоматизированное тестирование",
+              "code": "programming.testing.automation",
+              "description": "Написание автотестов"
+            },
+            "performance_testing": {
+              "name": "Нагрузочное тестирование",
+              "code": "programming.testing.performance",
+              "description": "Тестирование производительности"
+            }
+          }
+        },
+        "algorithms": {
+          "name": "Алгоритмы и структуры данных",
+          "code": "programming.algorithms",
+          "description": "Фундаментальные основы программирования",
+          "children": {
+            "data_structures": {
+              "name": "Структуры данных",
+              "code": "programming.algorithms.data_structures",
+              "description": "Массивы, списки, деревья, графы"
+            },
+            "algorithm_design": {
+              "name": "Проектирование алгоритмов",
+              "code": "programming.algorithms.design",
+              "description": "Создание эффективных алгоритмов"
+            },
+            "complexity_analysis": {
+              "name": "Анализ сложности",
+              "code": "programming.algorithms.complexity",
+              "description": "Big O нотация, оценка эффективности"
+            }
+          }
+        }
+      }
+    },
     "languages": {
       "name": "Иностранные языки",
       "code": "languages",

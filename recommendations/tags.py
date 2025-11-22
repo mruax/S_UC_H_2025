@@ -1,9 +1,15 @@
 # pip install natasha
 
 from natasha import Doc, Segmenter, NewsEmbedding, NewsMorphTagger, MorphVocab
-from collections import Counter, defaultdict
 import re
-from typing import Dict, List, Set, Tuple, Optional
+import json
+from typing import Dict, List, Tuple
+from collections import Counter
+
+# --- ПУТИ К ФАЙЛАМ ---
+INPUT_COURSES = "courses.json"  # Файл с курсами
+INPUT_SKILL_TREE = "grade_system\\skill_tree.json"  # Дерево навыков
+OUTPUT_FILE = "tagged_courses.json"  # Результат
 
 # --- Инициализация Natasha ---
 segmenter = Segmenter()
@@ -11,563 +17,383 @@ emb = NewsEmbedding()
 morph_tagger = NewsMorphTagger(emb)
 morph_vocab = MorphVocab()
 
-# --- Стоп-слова ---
-STOPWORDS = {
-    "курс", "для", "изучение", "основа", "введение", "по", "урок", "занятие",
-    "обучение", "год", "это", "быть", "который", "мочь", "весь", "свой", "наш",
-    "ваш", "тот", "этот", "мой", "твой", "его", "её", "наш", "учить", "научиться",
-    "получить", "узнать", "понять", "освоить", "один", "два", "три"
-}
-
-# Отглагольные существительные и процессы
-PROCESS_WORDS = {
-    "изучение", "создание", "разработка", "применение", "использование", "внедрение",
-    "освоение", "понимание", "знакомство", "погружение", "работа", "обучение",
-    "реализация", "оптимизация", "проектирование", "построение", "формирование"
-}
-
-# Общие прилагательные и слова сложности
-GENERIC_ADJECTIVES = {
-    "основной", "главный", "важный", "новый", "старый", "большой", "малый",
-    "хороший", "плохой", "простой", "сложный", "полный", "частичный", "общий",
-    "специальный", "различный", "разный", "первый", "последний", "современный",
-    "практический", "теоретический", "глубокий", "поверхностный", "начинающий",
-    "продвинутый", "базовый", "средний", "начальный", "профессиональный"
-}
-
-# --- Иерархия областей ---
-AREAS = {
-    "программирование": {
-        "keywords": ["программирование", "разработка", "код", "coding", "programming", "python", "java", "javascript",
-                     "c++"],
-        "priority": 10,
-        "related_words": ["разработчик", "программист", "developer"],
-        "default_categories": ["алгоритмы", "синтаксис языка"]
+# --- Официальные направления подготовки (Приказ №1061 от 12.09.2013) ---
+OFFICIAL_DIRECTIONS = {
+    "01.00.00": {
+        "name": "Математика и механика",
+        "keywords": ["математика", "механика", "геометрия", "алгебра", "статистика", "теория вероятностей",
+                     "математический анализ", "дифференциальное уравнение", "топология"]
     },
-    "данные": {
-        "keywords": ["данные", "data", "аналитика", "analytics", "анализ данных", "big data"],
-        "priority": 9,
-        "related_words": ["аналитик", "analyst", "обработка"],
-        "default_categories": ["анализ данных", "визуализация"]
+    "02.00.00": {
+        "name": "Компьютерные и информационные науки",
+        "keywords": ["компьютерные науки", "информационные науки", "теория информации", "алгоритм",
+                     "искусственный интеллект", "machine learning", "data science", "анализ данных"]
     },
-    "машинное обучение": {
-        "keywords": ["машинный", "обучение", "ml", "machine learning", "нейросеть", "ai", "искусственный интеллект",
-                     "нейронный"],
-        "priority": 9,
-        "related_words": ["модель", "алгоритм", "предсказание"],
-        "default_categories": ["модели", "алгоритмы"]
+    "09.00.00": {
+        "name": "Информатика и вычислительная техника",
+        "keywords": ["программирование", "python", "java", "javascript", "c++", "разработка", "код",
+                     "веб-разработка", "мобильная разработка", "база данных", "sql", "backend", "frontend",
+                     "devops", "тестирование", "git", "api", "framework", "архитектура", "html", "css"]
     },
-    "веб-разработка": {
-        "keywords": ["веб", "web", "сайт", "frontend", "backend", "fullstack", "react", "node"],
-        "priority": 8,
-        "related_words": ["браузер", "http", "интернет"],
-        "default_categories": ["веб-технологии", "фронтенд"]
+    "38.00.00": {
+        "name": "Экономика и управление",
+        "keywords": ["экономика", "менеджмент", "управление", "бизнес", "маркетинг", "финансы", "бухгалтерия",
+                     "предпринимательство", "продажи", "логистика", "управление персоналом", "hr", "стратегия"]
     },
-    "математика": {
-        "keywords": ["математика", "алгебра", "геометрия", "math", "матан", "статистика", "математический анализ",
-                     "анализ"],
-        "priority": 7,
-        "related_words": ["формула", "уравнение", "теорема", "функция"],
-        "default_categories": ["математический анализ", "теория"]
+    "45.00.00": {
+        "name": "Языкознание и литературоведение",
+        "keywords": ["английский", "немецкий", "французский", "испанский", "китайский", "японский", "язык",
+                     "грамматика", "лексика", "перевод", "лингвистика", "филология", "литература"]
     },
-    "дизайн": {
-        "keywords": ["дизайн", "design", "графика", "ui", "ux", "figma", "photoshop", "интерфейс"],
-        "priority": 7,
-        "related_words": ["макет", "прототип", "композиция"],
-        "default_categories": ["UI/UX дизайн", "визуальный дизайн"]
+    "54.00.00": {
+        "name": "Изобразительное и прикладные виды искусств",
+        "keywords": ["дизайн", "графический дизайн", "ui", "ux", "веб-дизайн", "photoshop", "illustrator",
+                     "figma", "3d", "моделирование", "blender", "анимация", "иллюстрация", "рисование"]
     },
-    "бизнес": {
-        "keywords": ["бизнес", "business", "менеджмент", "управление", "маркетинг"],
-        "priority": 6,
-        "related_words": ["стратегия", "продажи", "финансы"],
-        "default_categories": ["менеджмент", "стратегия"]
+    "42.00.00": {
+        "name": "Средства массовой информации и информационно-библиотечное дело",
+        "keywords": ["журналистика", "контент", "копирайтинг", "smm", "реклама", "связи с общественностью",
+                     "pr", "медиа", "издательское дело", "редактирование"]
+    },
+    "44.00.00": {
+        "name": "Образование и педагогические науки",
+        "keywords": ["педагогика", "образование", "преподавание", "обучение", "методика", "воспитание",
+                     "психология обучения", "дидактика"]
+    },
+    "11.00.00": {
+        "name": "Электроника, радиотехника и системы связи",
+        "keywords": ["электроника", "радиотехника", "связь", "телекоммуникации", "радио", "схемотехника"]
+    },
+    "49.00.00": {
+        "name": "Физическая культура и спорт",
+        "keywords": ["спорт", "физическая культура", "фитнес", "тренировка", "йога", "здоровье"]
+    },
+    "43.00.00": {
+        "name": "Сервис и туризм",
+        "keywords": ["туризм", "гостиничное дело", "сервис", "гостеприимство", "путешествия"]
+    },
+    "37.00.00": {
+        "name": "Психологические науки",
+        "keywords": ["психология", "эмоциональный интеллект", "психотерапия", "консультирование"]
+    },
+    "31.00.00": {
+        "name": "Клиническая медицина",
+        "keywords": ["медицина", "лечение", "диагностика", "терапия", "клиника", "здравоохранение"]
+    },
+    "10.00.00": {
+        "name": "Информационная безопасность",
+        "keywords": ["кибербезопасность", "защита информации", "безопасность", "шифрование", "этичный хакинг"]
+    },
+    "27.00.00": {
+        "name": "Управление в технических системах",
+        "keywords": ["автоматизация", "управление системами", "мехатроника", "робототехника", "iot", "arduino"]
     }
 }
 
-# --- Технологии и инструменты ---
-TECHNOLOGIES = {
-    "python": ["python", "питон"],
-    "java": ["java", "джава"],
-    "javascript": ["javascript", "js", "typescript", "node"],
-    "c++": ["c++", "cpp", "си++"],
-    "sql": ["sql", "база данных", "database", "postgresql", "mysql"],
-    "pandas": ["pandas"],
-    "numpy": ["numpy"],
-    "tensorflow": ["tensorflow", "tf"],
-    "pytorch": ["pytorch"],
-    "react": ["react", "реакт"],
-    "django": ["django", "джанго"],
-    "flask": ["flask"],
-    "docker": ["docker", "контейнер"],
-    "git": ["git", "github", "gitlab"],
-    "html/css": ["html", "css", "верстка"],
-    "figma": ["figma"],
-}
-
-# --- Предметные концепции ---
-DOMAIN_CONCEPTS = {
-    "нейронные сети": ["нейронный сеть", "нейросеть", "neural network"],
-    "API": ["api", "интерфейс программирования"],
-    "базы данных": ["база данных", "database", "бд"],
-    "алгоритмы": ["алгоритм"],
-    "структуры данных": ["структура данных"],
-    "веб-приложения": ["веб приложение", "web application", "приложение"],
-    "интерфейсы": ["интерфейс", "ui", "gui"],
-    "прототипы": ["прототип", "prototype"],
-    "макеты": ["макет", "layout"],
-    "модели": ["модель", "model"],
-    "пределы": ["предел", "limit"],
-    "производные": ["производный", "derivative"],
-    "интегралы": ["интеграл", "integral"],
-    "компоненты": ["компонент", "component"],
-    "упражнения": ["упражнение", "задача", "задание"],
-}
-
-# --- Категории ---
-CATEGORIES = {
-    "анализ данных": ["анализ данных", "data analysis", "визуализация", "обработка данных", "pandas", "numpy"],
-    "алгоритмы": ["алгоритм", "структура данных", "сортировка", "граф", "дерево"],
-    "веб-технологии": ["веб", "http", "api", "rest", "сервер", "клиент", "веб приложение"],
-    "мобильная разработка": ["мобильный", "android", "ios", "mobile"],
-    "devops": ["devops", "ci/cd", "deployment", "автоматизация", "docker", "kubernetes"],
-    "тестирование": ["тестирование", "testing", "qa", "тест", "pytest"],
-    "безопасность": ["безопасность", "security", "защита", "шифрование"],
-    "базы данных": ["база данных", "sql", "nosql", "запрос", "таблица"],
-    "проектирование": ["проектирование", "архитектура", "паттерн", "design pattern"],
-    "нейронные сети": ["нейронный", "нейросеть", "deep learning", "глубокий обучение"],
-    "математический анализ": ["математический анализ", "матан", "предел", "производный", "интеграл"],
-    "UI/UX дизайн": ["ui", "ux", "интерфейс", "пользовательский опыт", "юзабилити"],
-    "прототипирование": ["прототип", "макет", "wireframe"],
-    "синтаксис языка": ["синтаксис", "грамматика", "конструкция"],
-    "визуализация": ["визуализация", "график", "диаграмма", "plotting"],
-    "фронтенд": ["frontend", "фронтенд", "клиентский"],
-    "бэкенд": ["backend", "бэкенд", "серверный"],
-}
-
-# --- Атрибуты ---
-ATTRIBUTES = {
-    "практический": ["практический", "проект", "hands-on", "практика", "задача", "упражнение", "задание"],
-    "интенсивный": ["интенсивный", "bootcamp", "буткемп", "ускоренный", "интенсив"],
-    "краткий": ["краткий", "мини", "быстрый", "short", "экспресс", "компактный"],
-    "теоретический": ["теория", "лекция", "обзор", "фундаментальный", "академический"],
-    "сертификация": ["сертификат", "certification", "аттестация", "диплом"],
-    "интерактивный": ["интерактивный", "interactive", "живой", "онлайн-занятие"],
-}
-
 # --- Уровни сложности ---
-DIFFICULTY = {
-    "начальный": ["начальный", "введение", "основы", "начинающий", "базовый", "beginner", "basic", "нуль", "с нуля"],
-    "средний": ["средний", "intermediate", "продолжающий", "средний уровень"],
-    "продвинутый": ["продвинутый", "advanced", "эксперт", "профессиональный", "глубокий", "углубленный"]
+DIFFICULTY_LEVELS = {
+    "Без опыта": [
+        "с нуля", "для начинающих", "начальный", "базовый", "основы", "введение",
+        "без опыта", "новичок", "beginner", "не требуется опыт"
+    ],
+    "Начальный": [
+        "базовые знания", "некоторый опыт", "elementary", "pre-intermediate",
+        "начальные навыки", "знание основ"
+    ],
+    "Продвинутый": [
+        "продвинутый", "advanced", "профессионал", "эксперт", "глубокие знания",
+        "требуется опыт", "intermediate", "upper-intermediate", "углубленный"
+    ]
 }
 
-# --- Индикаторы сложности по контексту ---
-DIFFICULTY_INDICATORS = {
-    "начальный": ["основа", "введение", "начало", "первый шаг", "знакомство", "базовый"],
-    "средний": ["применение", "реализация", "создание"],
-    "продвинутый": ["оптимизация", "масштабирование", "архитектура", "профессиональный"]
-}
+
+class SkillTreeProcessor:
+    """Обработка дерева навыков для поиска компетенций"""
+
+    def __init__(self, skill_tree_path: str):
+        with open(skill_tree_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        self.skill_tree = data.get('skills_tree', {})
+        self.flat_skills = self._flatten_tree()
+
+    def _flatten_tree(self) -> List[Dict]:
+        """Преобразуем дерево в плоский список навыков с ключевыми словами"""
+        flat_list = []
+
+        def traverse(node, parent_keywords=None):
+            if parent_keywords is None:
+                parent_keywords = []
+
+            name = node.get('name', '')
+            code = node.get('code', '')
+            description = node.get('description', '')
+
+            # Извлекаем ключевые слова из названия и описания
+            keywords = parent_keywords.copy()
+            keywords.extend(self._extract_keywords(name))
+            keywords.extend(self._extract_keywords(description))
+
+            skill_info = {
+                'name': name,
+                'code': code,
+                'description': description,
+                'keywords': list(set([kw.lower() for kw in keywords if kw]))
+            }
+
+            flat_list.append(skill_info)
+
+            # Рекурсивно обходим детей
+            children = node.get('children', {})
+            for child_key, child_node in children.items():
+                traverse(child_node, keywords)
+
+        # Обходим все верхнеуровневые категории
+        for category_key, category_node in self.skill_tree.items():
+            traverse(category_node)
+
+        return flat_list
+
+    def _extract_keywords(self, text: str) -> List[str]:
+        """Извлекаем ключевые слова из текста"""
+        if not text:
+            return []
+
+        # Убираем знаки препинания и разбиваем на слова
+        text_lower = text.lower()
+        words = re.findall(r'\b\w+\b', text_lower)
+
+        # Фильтруем стоп-слова
+        stop_words = {'и', 'в', 'на', 'с', 'для', 'по', 'о', 'об', 'из', 'к', 'а', 'но'}
+        keywords = [w for w in words if w not in stop_words and len(w) > 2]
+
+        return keywords
+
+    def find_matching_skills(self, title: str, description: str, max_skills: int = 7) -> List[Dict]:
+        """Находим подходящие навыки из дерева на основе текста курса"""
+        full_text = f"{title} {description}".lower()
+
+        skill_scores = []
+
+        for skill in self.flat_skills:
+            score = 0
+            matched_keywords = []
+
+            # Проверяем вхождение названия навыка в текст (более точная проверка)
+            skill_name_lower = skill['name'].lower()
+            skill_words = skill_name_lower.split()
+
+            # Если название навыка полностью есть в тексте - большой бонус
+            if skill_name_lower in full_text:
+                score += 10
+                matched_keywords.append(skill_name_lower)
+            # Или если большинство слов из названия есть в тексте
+            elif len(skill_words) > 1:
+                words_found = sum(1 for word in skill_words if word in full_text and len(word) > 2)
+                if words_found >= len(skill_words) * 0.6:  # 60% слов найдено
+                    score += 5
+                    matched_keywords.extend(skill_words)
+
+            # Считаем релевантность на основе ключевых слов
+            for keyword in skill['keywords']:
+                if len(keyword) < 3:  # Игнорируем короткие слова
+                    continue
+
+                if keyword in full_text:
+                    # Точное совпадение слова
+                    if f" {keyword} " in f" {full_text} " or full_text.startswith(keyword) or full_text.endswith(
+                            keyword):
+                        score += 2
+                        matched_keywords.append(keyword)
+                    # Подстрока
+                    else:
+                        score += 0.5
+
+            if score > 0:
+                skill_scores.append({
+                    'skill': skill,
+                    'score': score,
+                    'matched_keywords': list(set(matched_keywords))
+                })
+
+        # Сортируем по релевантности
+        skill_scores.sort(key=lambda x: x['score'], reverse=True)
+
+        # Фильтруем - берем только те, у которых score >= 3 (достаточно релевантные)
+        filtered_skills = [item for item in skill_scores if item['score'] >= 3]
+
+        # Возвращаем топ навыков
+        return [item['skill'] for item in filtered_skills[:max_skills]]
 
 
 class CourseTagGenerator:
-    def __init__(self):
+    def __init__(self, skill_tree_processor: SkillTreeProcessor):
         self.segmenter = segmenter
         self.morph_tagger = morph_tagger
         self.morph_vocab = morph_vocab
+        self.skill_tree = skill_tree_processor
 
-    def analyze_tokens(self, text: str) -> List[Tuple[str, str]]:
-        """Анализ токенов с определением части речи"""
-        doc = Doc(text)
-        doc.segment(self.segmenter)
-        doc.tag_morph(self.morph_tagger)
-
-        tokens_info = []
-        for token in doc.tokens:
-            token.lemmatize(self.morph_vocab)
-            lemma = token.lemma.lower()
-            pos = token.pos
-            if len(lemma) > 2 and lemma not in STOPWORDS and lemma.isalpha():
-                tokens_info.append((lemma, pos))
-
-        return tokens_info
-
-    def extract_meaningful_phrases(self, text: str) -> List[str]:
-        """Извлекаем только ОСМЫСЛЕННЫЕ словосочетания"""
-        doc = Doc(text)
-        doc.segment(self.segmenter)
-        doc.tag_morph(self.morph_tagger)
-
-        for token in doc.tokens:
-            token.lemmatize(self.morph_vocab)
-
-        phrases = []
-        tokens = [t for t in doc.tokens if len(t.lemma) > 2 and t.lemma.lower() not in STOPWORDS]
-
-        for i in range(len(tokens) - 1):
-            current = tokens[i]
-            next_token = tokens[i + 1]
-
-            current_lemma = current.lemma.lower()
-            next_lemma = next_token.lemma.lower()
-
-            if current_lemma in GENERIC_ADJECTIVES:
-                continue
-
-            if current_lemma in PROCESS_WORDS:
-                continue
-
-            if current.pos == 'NOUN' and next_token.pos == 'NOUN':
-                if next_lemma not in PROCESS_WORDS and next_lemma not in GENERIC_ADJECTIVES:
-                    phrase = f"{current_lemma} {next_lemma}"
-                    phrases.append(phrase)
-
-            elif current.pos == 'ADJ' and next_token.pos == 'NOUN':
-                if next_lemma not in PROCESS_WORDS:
-                    phrase = f"{current_lemma} {next_lemma}"
-                    phrases.append(phrase)
-
-        return phrases
-
-    def normalize_text(self, text: str) -> List[str]:
-        """Нормализация текста: только существительные и значимые термины"""
-        tokens_info = self.analyze_tokens(text)
-
-        normalized = []
-        for lemma, pos in tokens_info:
-            if lemma in PROCESS_WORDS or lemma in GENERIC_ADJECTIVES:
-                continue
-
-            if pos in ['NOUN', 'PROPN'] or any(lemma in techs for techs in TECHNOLOGIES.values()):
-                normalized.append(lemma)
-
-        return normalized
-
-    def extract_phrases(self, text: str) -> List[str]:
-        """Извлекаем биграммы и триграммы"""
-        words = re.findall(r'\w+', text.lower())
-        phrases = []
-
-        phrases.extend(words)
-
-        for i in range(len(words) - 1):
-            phrases.append(f"{words[i]} {words[i + 1]}")
-
-        for i in range(len(words) - 2):
-            phrases.append(f"{words[i]} {words[i + 1]} {words[i + 2]}")
-
-        return phrases
-
-    def score_match(self, text: str, keywords: List[str]) -> float:
+    def calculate_relevance(self, text: str, keywords: List[str]) -> float:
         """Вычисляем релевантность текста к набору ключевых слов"""
         text_lower = text.lower()
-        phrases = self.extract_phrases(text)
-
         score = 0
+
         for keyword in keywords:
             keyword_lower = keyword.lower()
-            if keyword_lower in text_lower.split():
-                score += 2
-            elif any(keyword_lower in phrase for phrase in phrases):
+            if f" {keyword_lower} " in f" {text_lower} ":
+                score += 3
+            elif keyword_lower in text_lower:
                 score += 1
 
         return score
 
-    def is_similar_or_contains(self, tag1: str, tag2: str) -> bool:
-        """Проверяем, похожи ли теги или один содержится в другом"""
-        tag1_lower = tag1.lower()
-        tag2_lower = tag2.lower()
+    def determine_direction(self, title: str, description: str) -> str:
+        """Определяем направление подготовки"""
+        full_text = f"{title} {description}".lower()
 
-        if tag1_lower in tag2_lower or tag2_lower in tag1_lower:
-            return True
+        direction_scores = {}
 
-        words1 = set(tag1_lower.split())
-        words2 = set(tag2_lower.split())
-
-        if len(words1) > 0 and len(words2) > 0:
-            intersection = words1.intersection(words2)
-            min_len = min(len(words1), len(words2))
-            if len(intersection) / min_len > 0.5:
-                return True
-
-        return False
-
-    def determine_area(self, title: str, description: str) -> str:
-        """Определяем основную область курса"""
-        full_text = f"{title} {description}"
-
-        scores = {}
-        for area, data in AREAS.items():
-            match_score = self.score_match(full_text, data["keywords"])
-            related_score = self.score_match(full_text, data.get("related_words", []))
-            scores[area] = (match_score + related_score * 0.5) * data["priority"]
-
-        if scores and max(scores.values()) > 0:
-            return max(scores, key=scores.get)
-
-        for tech, keywords in TECHNOLOGIES.items():
-            if self.score_match(full_text, keywords) > 0:
-                if tech in ["python", "java", "javascript", "c++"]:
-                    return "программирование"
-                elif tech in ["tensorflow", "pytorch"]:
-                    return "машинное обучение"
-                elif tech in ["react", "html/css", "django", "flask"]:
-                    return "веб-разработка"
-                elif tech in ["sql", "pandas", "numpy"]:
-                    return "данные"
-                elif tech in ["figma"]:
-                    return "дизайн"
-
-        tech_indicators = ["программ", "код", "разработ", "техн", "it"]
-        if any(ind in full_text.lower() for ind in tech_indicators):
-            return "программирование"
-
-        return "общее обучение"
-
-    def determine_thematic_tags(self, title: str, description: str, area: str) -> List[str]:
-        """Определяем тематические теги: технологии + предметные концепции"""
-        full_text = f"{title} {description}"
-
-        tags = []
-        excluded_tags = [area] if area else []
-
-        # 1. Ищем технологии
-        tech_scores = {}
-        for tech, keywords in TECHNOLOGIES.items():
-            score = self.score_match(full_text, keywords)
+        for code, data in OFFICIAL_DIRECTIONS.items():
+            score = self.calculate_relevance(full_text, data["keywords"])
             if score > 0:
-                tech_scores[tech] = score
+                direction_scores[code] = score
 
-        if tech_scores:
-            sorted_techs = sorted(tech_scores.items(), key=lambda x: x[1], reverse=True)
-            for tech, _ in sorted_techs:
-                if not any(self.is_similar_or_contains(tech, ex) for ex in excluded_tags):
-                    tags.append(tech)
-                if len(tags) >= 2:
-                    break
+        if direction_scores:
+            return max(direction_scores, key=direction_scores.get)
 
-        # 2. Ищем предметные концепции
-        if len(tags) < 3:
-            concept_scores = {}
-            for concept, keywords in DOMAIN_CONCEPTS.items():
-                score = self.score_match(full_text, keywords)
-                if score > 0:
-                    concept_scores[concept] = score
+        return "44.00.00"
 
-            if concept_scores:
-                sorted_concepts = sorted(concept_scores.items(), key=lambda x: x[1], reverse=True)
-                for concept, _ in sorted_concepts:
-                    if len(tags) >= 3:
-                        break
-                    if not any(self.is_similar_or_contains(concept, ex) for ex in excluded_tags + tags):
-                        tags.append(concept)
+    def extract_competencies(self, title: str, description: str) -> List[str]:
+        """Извлекаем компетенции ТОЛЬКО из дерева навыков"""
+        # Ищем навыки в дереве
+        matching_skills = self.skill_tree.find_matching_skills(title, description, max_skills=7)
 
-        # 3. Извлекаем осмысленные словосочетания
-        if len(tags) < 3:
-            noun_phrases = self.extract_meaningful_phrases(full_text)
+        # Формируем список компетенций ТОЛЬКО из найденных навыков
+        competencies = []
+        for skill in matching_skills:
+            competency_name = skill['name']
+            if competency_name and competency_name not in competencies:
+                competencies.append(competency_name)
 
-            for phrase in noun_phrases:
-                if len(tags) >= 3:
-                    break
-                if not any(self.is_similar_or_contains(phrase, ex) for ex in excluded_tags + tags):
-                    tags.append(phrase)
-
-        # 4. Последний fallback: существительные
-        if len(tags) < 1:
-            normalized = self.normalize_text(full_text)
-
-            if area and area in AREAS:
-                area_words = set()
-                for keyword in AREAS[area]["keywords"]:
-                    area_words.update(keyword.lower().split())
-                normalized = [w for w in normalized if w not in area_words]
-
-            if normalized:
-                counter = Counter(normalized)
-                for word, _ in counter.most_common(3):
-                    if not any(self.is_similar_or_contains(word, ex) for ex in excluded_tags + tags):
-                        tags.append(word)
-                    if len(tags) >= 3:
-                        break
-
-        # Финальный fallback
-        if not tags:
-            title_words = self.normalize_text(title)
-            if title_words:
-                tags = [title_words[0]]
-            else:
-                tags = ["разное"]
-
-        return tags[:3]
-
-    def determine_categories(self, title: str, description: str, area: str, thematic_tags: List[str]) -> List[str]:
-        """Определяем категории с умными fallback'ами"""
-        full_text = f"{title} {description}"
-
-        excluded = [area] + thematic_tags
-
-        scores = {}
-        for category, keywords in CATEGORIES.items():
-            scores[category] = self.score_match(full_text, keywords)
-
-        sorted_categories = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        categories = []
-
-        # Берём категории с положительным скором
-        for cat, score in sorted_categories:
-            if score > 0 and not any(self.is_similar_or_contains(cat, ex) for ex in excluded + categories):
-                categories.append(cat)
-            if len(categories) >= 3:
-                break
-
-        # Fallback 1: ищем предметные концепции
-        if not categories:
-            for concept, keywords in DOMAIN_CONCEPTS.items():
-                if self.score_match(full_text, keywords) > 0:
-                    if not any(self.is_similar_or_contains(concept, ex) for ex in excluded + categories):
-                        categories.append(concept)
-                    if len(categories) >= 3:
-                        break
-
-        # Fallback 2: используем дефолтные категории для области
-        if not categories and area in AREAS:
-            default_cats = AREAS[area].get("default_categories", [])
-            for cat in default_cats:
-                if not any(self.is_similar_or_contains(cat, ex) for ex in excluded + categories):
-                    categories.append(cat)
-                if len(categories) >= 3:
-                    break
-
-        # Fallback 3: извлекаем осмысленные словосочетания из описания
-        if not categories:
-            noun_phrases = self.extract_meaningful_phrases(description)
-            for phrase in noun_phrases:
-                if not any(self.is_similar_or_contains(phrase, ex) for ex in excluded + categories):
-                    categories.append(phrase)
-                if len(categories) >= 1:
-                    break
-
-        # Fallback 4: берём самые частые существительные
-        if not categories:
-            normalized = self.normalize_text(description)
-            if normalized:
-                counter = Counter(normalized)
-                for word, _ in counter.most_common(3):
-                    if not any(self.is_similar_or_contains(word, ex) for ex in excluded + categories):
-                        categories.append(word)
-                    if len(categories) >= 1:
-                        break
-
-        # Последний fallback: используем thematic_tags как категории
-        if not categories and thematic_tags:
-            categories = [thematic_tags[0]]
-
-        return categories[:3]
-
-    def determine_attributes(self, title: str, description: str) -> List[str]:
-        """Определяем атрибуты курса"""
-        full_text = f"{title} {description}"
-
-        attrs = []
-        scores = {}
-
-        for attr, keywords in ATTRIBUTES.items():
-            score = self.score_match(full_text, keywords)
-            if score > 0:
-                scores[attr] = score
-
-        if scores:
-            attrs = [attr for attr, _ in sorted(scores.items(), key=lambda x: x[1], reverse=True)]
-
-        if not attrs:
-            practice_words = ["делать", "создать", "разработать", "проект", "применить", "реализовать", "упражнение",
-                              "задание", "задача"]
-            if any(word in full_text.lower() for word in practice_words):
-                attrs.append("практический")
-            elif any(word in full_text.lower() for word in ["теория", "концепция", "понимание", "изучение"]):
-                attrs.append("теоретический")
-            else:
-                if "применение" in full_text.lower() or "использование" in full_text.lower():
-                    attrs.append("практический")
-                else:
-                    attrs.append("теоретический")
-
-        return attrs
+        # Если не нашли НИЧЕГО - возвращаем пустой список
+        # НЕ добавляем дефолтные компетенции
+        return competencies[:7]
 
     def determine_difficulty(self, title: str, description: str) -> str:
         """Определяем уровень сложности"""
-        full_text = f"{title} {description}"
+        full_text = f"{title} {description}".lower()
 
         scores = {}
-        for level, keywords in DIFFICULTY.items():
-            scores[level] = self.score_match(full_text, keywords)
-
-        for level, indicators in DIFFICULTY_INDICATORS.items():
-            indicator_score = self.score_match(full_text, indicators)
-            scores[level] = scores.get(level, 0) + indicator_score * 0.5
+        for level, keywords in DIFFICULTY_LEVELS.items():
+            score = sum(1 for keyword in keywords if keyword in full_text)
+            scores[level] = score
 
         if scores and max(scores.values()) > 0:
             return max(scores, key=scores.get)
 
-        full_lower = full_text.lower()
+        return "Начальный"
 
-        if any(word in full_lower for word in ["начин", "основ", "введение", "базов", "первый"]):
-            return "начальный"
+    def generate_tags(self, course: Dict) -> Dict:
+        """Генерация всех тегов для курса"""
+        title = course.get('name', '')
+        description = course.get('description', '')
+        url = course.get('url', '')
 
-        if any(word in full_lower for word in ["продвин", "эксперт", "сложн", "профессионал"]):
-            return "продвинутый"
-
-        return "средний"
-
-    def generate_tags(self, title: str, description: str) -> Dict:
-        """Главная функция: генерация всех тегов с дедупликацией"""
-        area = self.determine_area(title, description)
-        thematic_tags = self.determine_thematic_tags(title, description, area)
-        categories = self.determine_categories(title, description, area, thematic_tags)
-        attributes = self.determine_attributes(title, description)
+        direction_code = self.determine_direction(title, description)
+        competencies = self.extract_competencies(title, description)
         difficulty = self.determine_difficulty(title, description)
 
         return {
-            "area": area,
-            "thematic_tags": thematic_tags,
-            "categories": categories,
-            "attributes": attributes,
-            "difficulty": difficulty
+            "name": title,
+            "description": description,
+            "url": url,
+            "tags": {
+                "direction": {
+                    "code": direction_code,
+                    "name": OFFICIAL_DIRECTIONS[direction_code]["name"]
+                },
+                "competencies": competencies,  # Может быть пустым списком!
+                "difficulty": difficulty
+            }
         }
 
 
-# --- Пример использования ---
+def process_courses(courses_file: str, skill_tree_file: str, output_file: str):
+    """Обработка курсов и сохранение результата"""
+    print(f"📖 Загрузка дерева навыков из {skill_tree_file}...")
+    skill_processor = SkillTreeProcessor(skill_tree_file)
+    print(f"✅ Загружено навыков: {len(skill_processor.flat_skills)}\n")
+
+    print(f"📖 Загрузка курсов из {courses_file}...")
+    with open(courses_file, 'r', encoding='utf-8') as f:
+        courses = json.load(f)
+
+    print(f"✅ Найдено курсов: {len(courses)}\n")
+    print("🤖 Начинаем тегирование...\n")
+
+    generator = CourseTagGenerator(skill_processor)
+    tagged_courses = []
+    courses_without_competencies = []
+
+    for i, course in enumerate(courses, 1):
+        if i <= 10 or i % 20 == 0:
+            print(f"[{i}/{len(courses)}] {course['name'][:50]}...")
+        tagged_course = generator.generate_tags(course)
+        tagged_courses.append(tagged_course)
+
+        # Считаем курсы без компетенций
+        if not tagged_course['tags']['competencies']:
+            courses_without_competencies.append(course['name'])
+
+    print(f"\n💾 Сохранение в {output_file}...")
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(tagged_courses, f, ensure_ascii=False, indent=2)
+
+    print("✅ Готово!\n")
+
+    # Статистика
+    direction_counter = Counter(c['tags']['direction']['code'] for c in tagged_courses)
+    difficulty_counter = Counter(c['tags']['difficulty'] for c in tagged_courses)
+
+    print("=" * 80)
+    print("СТАТИСТИКА")
+    print("=" * 80)
+
+    print("\n📊 Распределение по направлениям (топ-10):")
+    for code, count in direction_counter.most_common(10):
+        print(f"  {code} {OFFICIAL_DIRECTIONS[code]['name']}: {count}")
+
+    print("\n📈 Распределение по сложности:")
+    for difficulty, count in difficulty_counter.most_common():
+        print(f"  {difficulty}: {count}")
+
+    # Курсы без компетенций
+    print(f"\n⚠️  Курсы без найденных компетенций: {len(courses_without_competencies)}")
+    if courses_without_competencies:
+        print("   (для этих курсов нужно расширить дерево навыков)")
+        for name in courses_without_competencies[:5]:
+            print(f"   • {name}")
+        if len(courses_without_competencies) > 5:
+            print(f"   ... и еще {len(courses_without_competencies) - 5}")
+
+    print("\n" + "=" * 80)
+    print("ПРИМЕРЫ КОМПЕТЕНЦИЙ")
+    print("=" * 80)
+
+    # Показываем примеры с компетенциями
+    examples_shown = 0
+    for i, course in enumerate(tagged_courses):
+        if course['tags']['competencies']:
+            print(f"\n📚 {course['name']}")
+            print(f"   🎓 Направление: {course['tags']['direction']['code']} - {course['tags']['direction']['name']}")
+            print(f"   📊 Сложность: {course['tags']['difficulty']}")
+            print(f"   ✨ Компетенции:")
+            for comp in course['tags']['competencies']:
+                print(f"      • {comp}")
+            examples_shown += 1
+            if examples_shown >= 5:
+                break
+
+
 if __name__ == "__main__":
-    generator = CourseTagGenerator()
-
-    examples = [
-        {
-            "title": "Курс по Python для начинающих",
-            "description": "Изучение основ программирования, анализа данных и практических упражнений"
-        },
-        {
-            "title": "Продвинутый Machine Learning с TensorFlow",
-            "description": "Глубокое погружение в нейронные сети, проектная работа и оптимизация моделей"
-        },
-        {
-            "title": "Веб-разработка: React и Node.js",
-            "description": "Создание полноценных веб-приложений. API, база данных, деплой"
-        },
-        {
-            "title": "Основы математического анализа",
-            "description": "Теория пределов, производных и интегралов с примерами решения задач"
-        },
-        {
-            "title": "Дизайн интерфейсов в Figma",
-            "description": "Создание макетов и прототипов, работа с компонентами"
-        }
-    ]
-
-    for i, example in enumerate(examples, 1):
-        print(f"\n{'=' * 60}")
-        print(f"Пример {i}:")
-        print(f"Название: {example['title']}")
-        print(f"Описание: {example['description']}")
-        print(f"\nТеги:")
-        tags = generator.generate_tags(example['title'], example['description'])
-        for key, value in tags.items():
-            print(f"  {key}: {value}")
+    process_courses(INPUT_COURSES, INPUT_SKILL_TREE, OUTPUT_FILE)
