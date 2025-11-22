@@ -18,7 +18,7 @@
             </div>
         </div>
         <p style="font-size: 12px; color: #86868b; margin-top: 10px;">
-            Используйте мышь для вращения сферы. Наведите на курс для информации, нажмите для перехода к обучению.
+            Используйте мышь для вращения сферы. Прокрутка для масштабирования. Наведите на курс для информации, нажмите для перехода к обучению.
         </p>
     </div>
     
@@ -75,7 +75,8 @@
     renderer.setClearColor(0xffffff, 1);
     container.appendChild(renderer.domElement);
     
-    camera.position.z = 12;
+    // Начальная позиция камеры - немного дальше для большей сферы
+    camera.position.z = 10;
     
     // Освещение
     const ambientLight = new THREE.AmbientLight(0x404040, 2);
@@ -92,7 +93,8 @@
         .then(res => res.json())
         .then(data => {
             data.courses.forEach(course => {
-                const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+                // Увеличиваем размер сферы на 15% (было 0.3, стало ~0.345)
+                const geometry = new THREE.SphereGeometry(0.25, 32, 32);
                 const material = new THREE.MeshStandardMaterial({ 
                     color: 0x000000,
                     metalness: 0.3,
@@ -118,7 +120,7 @@
                 const textMaterial = new THREE.SpriteMaterial({ map: texture });
                 const textSprite = new THREE.Sprite(textMaterial);
                 textSprite.scale.set(2, 0.5, 1);
-                textSprite.position.set(0, 0.6, 0); // Позиция над шаром
+                textSprite.position.set(0, 0.7, 0); // Немного выше для большей сферы
                 sphere.add(textSprite);
                 
                 scene.add(sphere);
@@ -148,6 +150,21 @@
     
     container.addEventListener('mouseup', () => {
         isDragging = false;
+    });
+    
+    // Зум колесиком мыши
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        
+        // Определяем направление зума
+        const zoomSpeed = 0.5;
+        const zoomDirection = e.deltaY > 0 ? 1 : -1;
+        
+        // Изменяем позицию камеры по Z
+        camera.position.z += zoomDirection * zoomSpeed;
+        
+        // Ограничиваем зум (не слишком близко и не слишком далеко)
+        camera.position.z = Math.max(5, Math.min(30, camera.position.z));
     });
     
     // Подсказка при наведении
@@ -198,7 +215,7 @@
         
         // Медленное автовращение
         if (!isDragging) {
-            scene.rotation.y += 0.002;
+            scene.rotation.y += 0.001;
         }
         
         renderer.render(scene, camera);
