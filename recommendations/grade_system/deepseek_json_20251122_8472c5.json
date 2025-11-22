@@ -1,0 +1,666 @@
+{
+  "skills_tree": {
+    "languages": {
+      "name": "Иностранные языки",
+      "code": "languages",
+      "description": "Изучение иностранных языков",
+      "children": {
+        "english": {
+          "name": "Английский язык",
+          "code": "languages.english",
+          "description": "Английский язык для IT и бизнеса",
+          "children": {
+            "technical_english": {
+              "name": "Технический английский",
+              "code": "languages.english.technical",
+              "description": "Английский для IT-специалистов"
+            },
+            "business_english": {
+              "name": "Бизнес-английский",
+              "code": "languages.english.business",
+              "description": "Деловой английский"
+            }
+          }
+        },
+        "chinese": {
+          "name": "Китайский язык",
+          "code": "languages.chinese",
+          "description": "Китайский язык и HSK",
+          "children": {
+            "hsk3": {
+              "name": "HSK 3",
+              "code": "languages.chinese.hsk3",
+              "description": "Уровень HSK 3"
+            }
+          }
+        },
+        "spanish": {
+          "name": "Испанский язык",
+          "code": "languages.spanish",
+          "description": "Испанский язык",
+          "children": {
+            "a1": {
+              "name": "Уровень A1",
+              "code": "languages.spanish.a1",
+              "description": "Начальный уровень испанского"
+            }
+          }
+        },
+        "french": {
+          "name": "Французский язык",
+          "code": "languages.french",
+          "description": "Французский язык",
+          "children": {
+            "b1": {
+              "name": "Уровень B1",
+              "code": "languages.french.b1",
+              "description": "Средний уровень французского"
+            }
+          }
+        },
+        "german": {
+          "name": "Немецкий язык",
+          "code": "languages.german",
+          "description": "Немецкий язык",
+          "children": {
+            "a2": {
+              "name": "Уровень A2",
+              "code": "languages.german.a2",
+              "description": "Базовый уровень немецкого"
+            }
+          }
+        },
+        "japanese": {
+          "name": "Японский язык",
+          "code": "languages.japanese",
+          "description": "Японский язык и JLPT",
+          "children": {
+            "n5": {
+              "name": "Уровень N5",
+              "code": "languages.japanese.n5",
+              "description": "Начальный уровень японского"
+            }
+          }
+        },
+        "korean": {
+          "name": "Корейский язык",
+          "code": "languages.korean",
+          "description": "Корейский язык",
+          "children": {
+            "beginner": {
+              "name": "Начальный уровень",
+              "code": "languages.korean.beginner",
+              "description": "Основы корейского языка"
+            }
+          }
+        },
+        "arabic": {
+          "name": "Арабский язык",
+          "code": "languages.arabic",
+          "description": "Арабский язык",
+          "children": {
+            "beginner": {
+              "name": "Начальный уровень",
+              "code": "languages.arabic.beginner",
+              "description": "Основы арабского языка"
+            }
+          }
+        },
+        "hebrew": {
+          "name": "Иврит",
+          "code": "languages.hebrew",
+          "description": "Иврит",
+          "children": {
+            "beginner": {
+              "name": "Начальный уровень",
+              "code": "languages.hebrew.beginner",
+              "description": "Основы иврита"
+            }
+          }
+        },
+        "turkish": {
+          "name": "Турецкий язык",
+          "code": "languages.turkish",
+          "description": "Турецкий язык",
+          "children": {
+            "a1": {
+              "name": "Уровень A1",
+              "code": "languages.turkish.a1",
+              "description": "Начальный уровень турецкого"
+            }
+          }
+        },
+        "portuguese": {
+          "name": "Португальский язык",
+          "code": "languages.portuguese",
+          "description": "Португальский язык",
+          "children": {
+            "brazilian": {
+              "name": "Бразильский вариант",
+              "code": "languages.portuguese.brazilian",
+              "description": "Бразильский португальский"
+            }
+          }
+        }
+      }
+    },
+    "design": {
+      "name": "Дизайн",
+      "code": "design",
+      "description": "Графический и UI/UX дизайн",
+      "children": {
+        "ui_ux": {
+          "name": "UI/UX дизайн",
+          "code": "design.ui_ux",
+          "description": "Дизайн интерфейсов",
+          "children": {
+            "figma": {
+              "name": "Figma",
+              "code": "design.ui_ux.figma",
+              "description": "Работа в Figma"
+            },
+            "user_research": {
+              "name": "Пользовательские исследования",
+              "code": "design.ui_ux.research",
+              "description": "User Research"
+            },
+            "prototyping": {
+              "name": "Прототипирование",
+              "code": "design.ui_ux.prototyping",
+              "description": "Создание прототипов"
+            }
+          }
+        },
+        "graphic_design": {
+          "name": "Графический дизайн",
+          "code": "design.graphic",
+          "description": "Векторная графика и иллюстрация",
+          "children": {
+            "illustrator": {
+              "name": "Adobe Illustrator",
+              "code": "design.graphic.illustrator",
+              "description": "Векторная графика"
+            },
+            "typography": {
+              "name": "Типографика",
+              "code": "design.graphic.typography",
+              "description": "Работа со шрифтами"
+            },
+            "color_theory": {
+              "name": "Теория цвета",
+              "code": "design.graphic.color",
+              "description": "Цветовые схемы и палитры"
+            }
+          }
+        },
+        "3d_modeling": {
+          "name": "3D-моделирование",
+          "code": "design.3d",
+          "description": "Трехмерная графика",
+          "children": {
+            "blender": {
+              "name": "Blender",
+              "code": "design.3d.blender",
+              "description": "3D-моделирование в Blender"
+            },
+            "texturing": {
+              "name": "Текстурирование",
+              "code": "design.3d.texturing",
+              "description": "Создание текстур"
+            },
+            "rendering": {
+              "name": "Рендеринг",
+              "code": "design.3d.rendering",
+              "description": "Визуализация 3D-сцен"
+            }
+          }
+        },
+        "motion_design": {
+          "name": "Моушн-дизайн",
+          "code": "design.motion",
+          "description": "Анимированная графика",
+          "children": {
+            "after_effects": {
+              "name": "After Effects",
+              "code": "design.motion.after_effects",
+              "description": "Adobe After Effects"
+            }
+          }
+        }
+      }
+    },
+    "video_production": {
+      "name": "Видеопроизводство",
+      "code": "video",
+      "description": "Создание и монтаж видео",
+      "children": {
+        "video_editing": {
+          "name": "Видеомонтаж",
+          "code": "video.editing",
+          "description": "Монтаж видео",
+          "children": {
+            "premiere_pro": {
+              "name": "Premiere Pro",
+              "code": "video.editing.premiere",
+              "description": "Adobe Premiere Pro"
+            },
+            "color_correction": {
+              "name": "Цветокоррекция",
+              "code": "video.editing.color",
+              "description": "Color grading"
+            },
+            "sound_design": {
+              "name": "Саунд-дизайн",
+              "code": "video.editing.sound",
+              "description": "Работа со звуком"
+            }
+          }
+        },
+        "youtube": {
+          "name": "Создание контента для YouTube",
+          "code": "video.youtube",
+          "description": "YouTube контент",
+          "children": {
+            "scriptwriting": {
+              "name": "Сценарное мастерство",
+              "code": "video.youtube.scriptwriting",
+              "description": "Написание сценариев"
+            },
+            "channel_promotion": {
+              "name": "Продвижение канала",
+              "code": "video.youtube.promotion",
+              "description": "YouTube маркетинг"
+            }
+          }
+        }
+      }
+    },
+    "photography": {
+      "name": "Фотография",
+      "code": "photography",
+      "description": "Фотография и обработка",
+      "children": {
+        "camera_basics": {
+          "name": "Основы фотографии",
+          "code": "photography.basics",
+          "description": "Базовые техники съемки"
+        },
+        "lightroom": {
+          "name": "Lightroom",
+          "code": "photography.lightroom",
+          "description": "Обработка в Lightroom"
+        },
+        "composition": {
+          "name": "Композиция",
+          "code": "photography.composition",
+          "description": "Композиционные приемы"
+        }
+      }
+    },
+    "music_production": {
+      "name": "Музыкальное производство",
+      "code": "music",
+      "description": "Создание музыки и звука",
+      "children": {
+        "daw": {
+          "name": "DAW",
+          "code": "music.daw",
+          "description": "Цифровые аудио рабочие станции",
+          "children": {
+            "ableton": {
+              "name": "Ableton Live",
+              "code": "music.daw.ableton",
+              "description": "Ableton Live"
+            },
+            "fl_studio": {
+              "name": "FL Studio",
+              "code": "music.daw.flstudio",
+              "description": "FL Studio"
+            }
+          }
+        },
+        "sound_design": {
+          "name": "Саунд-дизайн",
+          "code": "music.sound_design",
+          "description": "Создание звуковых эффектов"
+        },
+        "music_theory": {
+          "name": "Музыкальная теория",
+          "code": "music.theory",
+          "description": "Основы музыки"
+        }
+      }
+    },
+    "business": {
+      "name": "Бизнес и менеджмент",
+      "code": "business",
+      "description": "Бизнес-навыки и управление",
+      "children": {
+        "finance": {
+          "name": "Финансы",
+          "code": "business.finance",
+          "description": "Финансовый менеджмент",
+          "children": {
+            "financial_planning": {
+              "name": "Финансовое планирование",
+              "code": "business.finance.planning",
+              "description": "Бюджетирование и планирование"
+            },
+            "investment_analysis": {
+              "name": "Анализ инвестиций",
+              "code": "business.finance.investment",
+              "description": "Инвестиционный анализ"
+            }
+          }
+        },
+        "marketing": {
+          "name": "Маркетинг",
+          "code": "business.marketing",
+          "description": "Маркетинг и продвижение",
+          "children": {
+            "digital_marketing": {
+              "name": "Цифровой маркетинг",
+              "code": "business.marketing.digital",
+              "description": "Online маркетинг"
+            },
+            "smm": {
+              "name": "SMM",
+              "code": "business.marketing.smm",
+              "description": "Социальные медиа"
+            },
+            "content_marketing": {
+              "name": "Контент-маркетинг",
+              "code": "business.marketing.content",
+              "description": "Создание контента"
+            }
+          }
+        },
+        "project_management": {
+          "name": "Управление проектами",
+          "code": "business.pm",
+          "description": "Project Management",
+          "children": {
+            "agile": {
+              "name": "Agile",
+              "code": "business.pm.agile",
+              "description": "Гибкие методологии"
+            },
+            "scrum": {
+              "name": "Scrum",
+              "code": "business.pm.scrum",
+              "description": "Scrum фреймворк"
+            }
+          }
+        },
+        "hospitality": {
+          "name": "Гостиничный бизнес",
+          "code": "business.hospitality",
+          "description": "Индустрия гостеприимства"
+        }
+      }
+    },
+    "personal_development": {
+      "name": "Личностное развитие",
+      "code": "personal",
+      "description": "Саморазвитие и мягкие навыки",
+      "children": {
+        "communication": {
+          "name": "Коммуникация",
+          "code": "personal.communication",
+          "description": "Навыки общения",
+          "children": {
+            "public_speaking": {
+              "name": "Публичные выступления",
+              "code": "personal.communication.public_speaking",
+              "description": "Ораторское искусство"
+            },
+            "psychology": {
+              "name": "Психология общения",
+              "code": "personal.communication.psychology",
+              "description": "Психологические аспекты"
+            }
+          }
+        },
+        "productivity": {
+          "name": "Продуктивность",
+          "code": "personal.productivity",
+          "description": "Тайм-менеджмент",
+          "children": {
+            "time_management": {
+              "name": "Тайм-менеджмент",
+              "code": "personal.productivity.time",
+              "description": "Управление временем"
+            },
+            "goal_setting": {
+              "name": "Постановка целей",
+              "code": "personal.productivity.goals",
+              "description": "Целеполагание"
+            }
+          }
+        },
+        "creativity": {
+          "name": "Креативность",
+          "code": "personal.creativity",
+          "description": "Творческие навыки",
+          "children": {
+            "writing": {
+              "name": "Письмо",
+              "code": "personal.creativity.writing",
+              "description": "Навыки письма",
+              "children": {
+                "copywriting": {
+                  "name": "Копирайтинг",
+                  "code": "personal.creativity.writing.copywriting",
+                  "description": "Написание текстов"
+                },
+                "creative_writing": {
+                  "name": "Творческое письмо",
+                  "code": "personal.creativity.writing.creative",
+                  "description": "Художественное письмо"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "health_fitness": {
+      "name": "Здоровье и фитнес",
+      "code": "health",
+      "description": "Физическое и ментальное здоровье",
+      "children": {
+        "yoga": {
+          "name": "Йога",
+          "code": "health.yoga",
+          "description": "Йога и дыхательные практики"
+        },
+        "fitness": {
+          "name": "Фитнес",
+          "code": "health.fitness",
+          "description": "Фитнес-тренировки",
+          "children": {
+            "personal_training": {
+              "name": "Персональный тренинг",
+              "code": "health.fitness.training",
+              "description": "Работа фитнес-тренером"
+            }
+          }
+        },
+        "nutrition": {
+          "name": "Нутрициология",
+          "code": "health.nutrition",
+          "description": "Наука о питании"
+        },
+        "mental_health": {
+          "name": "Ментальное здоровье",
+          "code": "health.mental",
+          "description": "Психологическое благополучие",
+          "children": {
+            "meditation": {
+              "name": "Медитация",
+              "code": "health.mental.meditation",
+              "description": "Практики осознанности"
+            },
+            "cbt": {
+              "name": "КПТ",
+              "code": "health.mental.cbt",
+              "description": "Когнитивно-поведенческая терапия"
+            }
+          }
+        }
+      }
+    },
+    "handicrafts": {
+      "name": "Рукоделие и ремесла",
+      "code": "crafts",
+      "description": "Традиционные ремесла",
+      "children": {
+        "woodworking": {
+          "name": "Столярное дело",
+          "code": "crafts.woodworking",
+          "description": "Работа с деревом"
+        },
+        "ceramics": {
+          "name": "Керамика",
+          "code": "crafts.ceramics",
+          "description": "Гончарное искусство"
+        },
+        "sewing": {
+          "name": "Швейное дело",
+          "code": "crafts.sewing",
+          "description": "Пошив одежды"
+        },
+        "knitting": {
+          "name": "Вязание",
+          "code": "crafts.knitting",
+          "description": "Вязание спицами и крючком"
+        },
+        "floristry": {
+          "name": "Флористика",
+          "code": "crafts.floristry",
+          "description": "Искусство составления букетов"
+        },
+        "calligraphy": {
+          "name": "Каллиграфия",
+          "code": "crafts.calligraphy",
+          "description": "Искусство красивого письма"
+        }
+      }
+    },
+    "science": {
+      "name": "Наука",
+      "code": "science",
+      "description": "Естественные и гуманитарные науки",
+      "children": {
+        "astronomy": {
+          "name": "Астрономия",
+          "code": "science.astronomy",
+          "description": "Наука о небесных телах"
+        },
+        "genetics": {
+          "name": "Генетика",
+          "code": "science.genetics",
+          "description": "Наука о наследственности"
+        },
+        "ecology": {
+          "name": "Экология",
+          "code": "science.ecology",
+          "description": "Наука об окружающей среде"
+        },
+        "anthropology": {
+          "name": "Антропология",
+          "code": "science.anthropology",
+          "description": "Наука о человеке"
+        },
+        "art_history": {
+          "name": "История искусств",
+          "code": "science.art_history",
+          "description": "Изучение искусства"
+        },
+        "philosophy": {
+          "name": "Философия",
+          "code": "science.philosophy",
+          "description": "Философские учения"
+        }
+      }
+    },
+    "sports": {
+      "name": "Спорт и активный отдых",
+      "code": "sports",
+      "description": "Спортивные активности",
+      "children": {
+        "scuba_diving": {
+          "name": "Дайвинг",
+          "code": "sports.scuba",
+          "description": "Подводное плавание"
+        },
+        "mountaineering": {
+          "name": "Альпинизм",
+          "code": "sports.mountaineering",
+          "description": "Скалолазание и восхождения"
+        },
+        "skydiving": {
+          "name": "Парашютный спорт",
+          "code": "sports.skydiving",
+          "description": "Прыжки с парашютом"
+        }
+      }
+    },
+    "robotics": {
+      "name": "Робототехника",
+      "code": "robotics",
+      "description": "Создание роботов",
+      "children": {
+        "arduino": {
+          "name": "Arduino",
+          "code": "robotics.arduino",
+          "description": "Программирование Arduino"
+        },
+        "electronics": {
+          "name": "Электроника",
+          "code": "robotics.electronics",
+          "description": "Основы электроники"
+        }
+      }
+    },
+    "cooking": {
+      "name": "Кулинария",
+      "code": "cooking",
+      "description": "Искусство приготовления пищи",
+      "children": {
+        "culinary_basics": {
+          "name": "Основы кулинарии",
+          "code": "cooking.basics",
+          "description": "Базовые кулинарные техники"
+        },
+        "wine": {
+          "name": "Виноделие",
+          "code": "cooking.wine",
+          "description": "Искусство сомелье"
+        }
+      }
+    },
+    "gardening": {
+      "name": "Садоводство",
+      "code": "gardening",
+      "description": "Выращивание растений",
+      "children": {
+        "landscape_design": {
+          "name": "Ландшафтный дизайн",
+          "code": "gardening.landscape",
+          "description": "Проектирование садов"
+        },
+        "beekeeping": {
+          "name": "Пчеловодство",
+          "code": "gardening.beekeeping",
+          "description": "Разведение пчел"
+        }
+      }
+    },
+    "acting": {
+      "name": "Актерское мастерство",
+      "code": "acting",
+      "description": "Сценическое искусство"
+    }
+  }
+}
