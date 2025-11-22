@@ -1,0 +1,608 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактор траектории{% endblock %}
+
+{% block extra_css %}
+<style>
+    .editor-container {
+        display: flex;
+        height: calc(100vh - 200px);
+        gap: 20px;
+    }
+    
+    .courses-sidebar {
+        width: 300px;
+        background: #f5f5f7;
+        border-radius: 12px;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    
+    .course-item {
+        background: #fff;
+        border: 1px solid #d2d2d7;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        cursor: move;
+        transition: all 0.2s;
+    }
+    
+    .course-item:hover {
+        border-color: #000;
+        transform: translateX(5px);
+    }
+    
+    .course-item.dragging {
+        opacity: 0.5;
+    }
+    
+    .canvas-container {
+        flex: 1;
+        background: #fff;
+        border: 1px solid #d2d2d7;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .canvas-header {
+        padding: 20px;
+        border-bottom: 1px solid #d2d2d7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .canvas-wrapper {
+        width: 100%;
+        height: calc(100% - 80px);
+        overflow: hidden;
+        position: relative;
+        background: #fafafa;
+    }
+    
+    .trajectory-canvas {
+        width: 3000px;
+        height: 800px;
+        position: relative;
+        transform-origin: 0 0;
+        transition: transform 0.1s;
+    }
+    
+    .semester-column {
+        position: absolute;
+        width: 700px;
+        height: 100%;
+        border-right: 2px solid #d2d2d7;
+    }
+    
+    .semester-label {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 18px;
+        font-weight: 600;
+        background: #000;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 8px;
+    }
+    
+    .drop-zone {
+        position: absolute;
+        width: 100%;
+        height: 33.33%;
+        border: 2px dashed transparent;
+        transition: all 0.2s;
+    }
+    
+    .drop-zone-top {
+        top: 0;
+    }
+    
+    .drop-zone-center {
+        top: 33.33%;
+        border-top: 3px solid #000;
+        border-bottom: 3px solid #000;
+    }
+    
+    .drop-zone-bottom {
+        top: 66.66%;
+    }
+    
+    .drop-zone.drag-over {
+        border-color: #000;
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .center-line {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #000;
+        transform: translateY(-2px);
+        z-index: 1;
+    }
+    
+    .course-card {
+        position: absolute;
+        background: #fff;
+        border: 2px solid #000;
+        border-radius: 8px;
+        padding: 12px;
+        width: 200px;
+        cursor: move;
+        transition: transform 0.2s;
+        z-index: 10;
+    }
+    
+    .course-card.optional {
+        border-style: dashed;
+        background: #f5f5f7;
+    }
+    
+    .course-card:hover {
+        transform: scale(1.05);
+        z-index: 100;
+    }
+    
+    .course-card-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    
+    .course-card-category {
+        font-size: 11px;
+        color: #86868b;
+    }
+    
+    .course-card-remove {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 24px;
+        height: 24px;
+        background: #ff3b30;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 14px;
+        display: none;
+    }
+    
+    .course-card:hover .course-card-remove {
+        display: block;
+    }
+    
+    .zoom-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+    }
+    
+    .zoom-btn {
+        width: 40px;
+        height: 40px;
+        background: #000;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 20px;
+    }
+    
+    .zoom-btn:hover {
+        background: #333;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-container">
+    <div class="courses-sidebar">
+        <h2 style="font-size: 20px; margin-bottom: 20px;">Курсы</h2>
+        <input type="text" id="search-courses" placeholder="Поиск курсов" style="margin-bottom: 15px;">
+        
+        <div id="courses-list">
+            {% for course in all_courses %}
+            <div class="course-item" draggable="true" 
+                 data-course-id="{{ course.id }}" 
+                 data-course-title="{{ course.title }}"
+                 data-course-category="{{ course.category }}"
+                 data-course-description="{{ course.description|truncatewords:10 }}">
+                <div style="font-size: 14px; font-weight: 500;">{{ course.title }}</div>
+                <div style="font-size: 11px; color: #86868b; margin-top: 4px;">{{ course.category }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="canvas-container">
+        <div class="canvas-header">
+            <input type="text" id="trajectory-name" 
+                   placeholder="Название траектории" 
+                   value="{% if trajectory %}{{ trajectory.name }}{% else %}Новая траектория{% endif %}" 
+                   style="font-size: 24px; font-weight: 600; border: none; border-bottom: 2px solid transparent; padding: 5px 0; width: 400px;">
+            <button id="save-trajectory-btn" class="btn">Сохранить траекторию</button>
+        </div>
+        
+        <div class="canvas-wrapper" id="canvas-wrapper">
+            <div class="trajectory-canvas" id="trajectory-canvas">
+                <div class="center-line"></div>
+                
+                <div class="semester-column" style="left: 0px;">
+                    <div class="semester-label">1 семестр</div>
+                    
+                    <div class="drop-zone drop-zone-top" 
+                         data-semester="1" 
+                         data-position="top"></div>
+                    
+                    <div class="drop-zone drop-zone-center" 
+                         data-semester="1" 
+                         data-position="center"></div>
+                    
+                    <div class="drop-zone drop-zone-bottom" 
+                         data-semester="1" 
+                         data-position="bottom"></div>
+                </div>
+                
+                <div class="semester-column" style="left: 700px;">
+                    <div class="semester-label">2 семестр</div>
+                    
+                    <div class="drop-zone drop-zone-top" 
+                         data-semester="2" 
+                         data-position="top"></div>
+                    
+                    <div class="drop-zone drop-zone-center" 
+                         data-semester="2" 
+                         data-position="center"></div>
+                    
+                    <div class="drop-zone drop-zone-bottom" 
+                         data-semester="2" 
+                         data-position="bottom"></div>
+                </div>
+                
+                <div class="semester-column" style="left: 1400px;">
+                    <div class="semester-label">3 семестр</div>
+                    
+                    <div class="drop-zone drop-zone-top" 
+                         data-semester="3" 
+                         data-position="top"></div>
+                    
+                    <div class="drop-zone drop-zone-center" 
+                         data-semester="3" 
+                         data-position="center"></div>
+                    
+                    <div class="drop-zone drop-zone-bottom" 
+                         data-semester="3" 
+                         data-position="bottom"></div>
+                </div>
+                
+                <div class="semester-column" style="left: 2100px;">
+                    <div class="semester-label">4 семестр</div>
+                    
+                    <div class="drop-zone drop-zone-top" 
+                         data-semester="4" 
+                         data-position="top"></div>
+                    
+                    <div class="drop-zone drop-zone-center" 
+                         data-semester="4" 
+                         data-position="center"></div>
+                    
+                    <div class="drop-zone drop-zone-bottom" 
+                         data-semester="4" 
+                         data-position="bottom"></div>
+                </div>
+            </div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-out">-</button>
+                <button class="zoom-btn" id="zoom-reset">100%</button>
+                <button class="zoom-btn" id="zoom-in">+</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let courses = [];
+let zoom = 1;
+let pan = { x: 0, y: 0 };
+let isPanning = false;
+let startPan = { x: 0, y: 0 };
+
+const existingData = {{ existing_data|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== Trajectory Editor Initialized ===');
+    
+    initDragAndDrop();
+    initZoomAndPan();
+    initSearch();
+    
+    document.getElementById('save-trajectory-btn').addEventListener('click', saveTrajectory);
+    
+    if (Object.keys(existingData).length > 0) {
+        loadExistingCourses();
+    }
+});
+
+function initDragAndDrop() {
+    const courseItems = document.querySelectorAll('.course-item');
+    console.log('Initializing drag and drop for', courseItems.length, 'courses');
+    
+    courseItems.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+    });
+    
+    const dropZones = document.querySelectorAll('.drop-zone');
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('drop', handleDrop);
+        zone.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+function handleDragStart(e) {
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('courseId', e.target.dataset.courseId);
+    e.dataTransfer.setData('courseTitle', e.target.dataset.courseTitle);
+    e.dataTransfer.setData('courseCategory', e.target.dataset.courseCategory);
+    e.dataTransfer.setData('courseDescription', e.target.dataset.courseDescription);
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    e.currentTarget.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    
+    const courseId = parseInt(e.dataTransfer.getData('courseId'));
+    const courseTitle = e.dataTransfer.getData('courseTitle');
+    const courseCategory = e.dataTransfer.getData('courseCategory');
+    const courseDescription = e.dataTransfer.getData('courseDescription');
+    const semester = parseInt(e.currentTarget.dataset.semester);
+    const position = e.currentTarget.dataset.position;
+    
+    if (courseExistsInTrajectory(courseId)) {
+        alert('Этот курс уже добавлен в траекторию');
+        return;
+    }
+    
+    const course = {
+        course_id: courseId,
+        title: courseTitle,
+        category: courseCategory,
+        description: courseDescription,
+        semester: semester,
+        position: position,
+        order: getCoursesInZone(semester, position).length
+    };
+    
+    courses.push(course);
+    renderCourse(course);
+    
+    console.log('Added course:', courseTitle, 'to semester', semester, position);
+}
+
+function courseExistsInTrajectory(courseId) {
+    return courses.some(c => c.course_id === courseId);
+}
+
+function getCoursesInZone(semester, position) {
+    return courses.filter(c => c.semester === semester && c.position === position);
+}
+
+function renderCourse(course) {
+    const canvas = document.getElementById('trajectory-canvas');
+    const card = document.createElement('div');
+    card.className = `course-card ${course.position !== 'center' ? 'optional' : ''}`;
+    card.dataset.courseId = course.course_id;
+    
+    const semesterOffset = (course.semester - 1) * 700;
+    const zoneOffset = course.order * 220;
+    
+    let yPosition;
+    if (course.position === 'top') {
+        yPosition = 50 + zoneOffset;
+    } else if (course.position === 'center') {
+        yPosition = 350 + zoneOffset;
+    } else {
+        yPosition = 550 + zoneOffset;
+    }
+    
+    card.style.left = `${semesterOffset + 50}px`;
+    card.style.top = `${yPosition}px`;
+    
+    card.innerHTML = `
+        <div class="course-card-title">${course.title}</div>
+        <div class="course-card-category">${course.category}</div>
+        <button class="course-card-remove" onclick="removeCourse(${course.course_id})">×</button>
+    `;
+    
+    canvas.appendChild(card);
+}
+
+function removeCourse(courseId) {
+    courses = courses.filter(c => c.course_id !== courseId);
+    
+    const cards = document.querySelectorAll('.course-card');
+    cards.forEach(card => {
+        if (parseInt(card.dataset.courseId) === courseId) {
+            card.remove();
+        }
+    });
+    
+    reorderCourses();
+}
+
+function reorderCourses() {
+    const cards = document.querySelectorAll('.course-card');
+    cards.forEach(card => card.remove());
+    
+    const grouped = {};
+    courses.forEach(course => {
+        const key = `${course.semester}_${course.position}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(course);
+    });
+    
+    Object.keys(grouped).forEach(key => {
+        grouped[key].forEach((course, index) => {
+            course.order = index;
+            renderCourse(course);
+        });
+    });
+}
+
+function loadExistingCourses() {
+    console.log('Loading existing courses:', existingData);
+    
+    Object.keys(existingData).forEach(key => {
+        const [semester, position] = key.split('_');
+        existingData[key].forEach((courseData, index) => {
+            const course = {
+                course_id: courseData.course_id,
+                title: courseData.title,
+                category: courseData.category,
+                description: courseData.description || '',
+                semester: parseInt(semester),
+                position: position,
+                order: index
+            };
+            courses.push(course);
+            renderCourse(course);
+        });
+    });
+}
+
+function initZoomAndPan() {
+    const wrapper = document.getElementById('canvas-wrapper');
+    const canvas = document.getElementById('trajectory-canvas');
+    
+    document.getElementById('zoom-in').addEventListener('click', () => {
+        zoom = Math.min(zoom + 0.1, 2);
+        updateTransform();
+    });
+    
+    document.getElementById('zoom-out').addEventListener('click', () => {
+        zoom = Math.max(zoom - 0.1, 0.3);
+        updateTransform();
+    });
+    
+    document.getElementById('zoom-reset').addEventListener('click', () => {
+        zoom = 1;
+        pan = { x: 0, y: 0 };
+        updateTransform();
+    });
+    
+    wrapper.addEventListener('mousedown', (e) => {
+        if (e.target === wrapper || e.target === canvas) {
+            isPanning = true;
+            startPan = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+            wrapper.style.cursor = 'grabbing';
+        }
+    });
+    
+    wrapper.addEventListener('mousemove', (e) => {
+        if (isPanning) {
+            pan.x = e.clientX - startPan.x;
+            pan.y = e.clientY - startPan.y;
+            updateTransform();
+        }
+    });
+    
+    wrapper.addEventListener('mouseup', () => {
+        isPanning = false;
+        wrapper.style.cursor = 'default';
+    });
+    
+    wrapper.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.05 : 0.05;
+        zoom = Math.max(0.3, Math.min(2, zoom + delta));
+        updateTransform();
+    });
+}
+
+function updateTransform() {
+    const canvas = document.getElementById('trajectory-canvas');
+    canvas.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
+    document.getElementById('zoom-reset').textContent = `${Math.round(zoom * 100)}%`;
+}
+
+function initSearch() {
+    const searchInput = document.getElementById('search-courses');
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('.course-item').forEach(item => {
+            const title = item.dataset.courseTitle.toLowerCase();
+            item.style.display = title.includes(query) ? 'block' : 'none';
+        });
+    });
+}
+
+function saveTrajectory() {
+    const name = document.getElementById('trajectory-name').value;
+    
+    if (!name.trim()) {
+        alert('Введите название траектории');
+        return;
+    }
+    
+    if (courses.length === 0) {
+        alert('Добавьте хотя бы один курс в траекторию');
+        return;
+    }
+    
+    const data = {
+        {% if trajectory %}
+        trajectory_id: {{ trajectory.id }},
+        {% endif %}
+        name: name,
+        courses: courses
+    };
+    
+    fetch('{% url "save_trajectory" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `/trajectory/${data.trajectory_id}/`;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при сохранении траектории');
+    });
+}
+</script>
+{% endblock %}

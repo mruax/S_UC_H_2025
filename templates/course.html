@@ -44,13 +44,15 @@
         </p>
     </div>
 
-    <!-- Заглушка для будущей интеграции с Moodle -->
     <div style="text-align: center; margin-top: 40px; padding: 40px; background: #f5f5f7; border-radius: 12px;">
-        <h3 style="margin-bottom: 15px;">Интеграция с Moodle</h3>
-        <p style="color: #86868b; margin-bottom: 20px;">Страница прохождения курса будет здесь</p>
-        <button class="btn" onclick="alert('Интеграция с Moodle в разработке')">
-            Начать обучение
-        </button>
+        <h3 style="margin-bottom: 15px;">Перейти к курсу</h3>
+        {% if course.external_url %}
+        <a href="{{ course.external_url }}" target="_blank" class="btn" style="display: inline-block; margin-top: 20px;">
+            Открыть курс
+        </a>
+        {% else %}
+        <p style="color: #86868b; margin-bottom: 20px;">Ссылка на курс пока не добавлена</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

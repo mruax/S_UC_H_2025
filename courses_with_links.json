@@ -1,0 +1,124 @@
+{
+  "courses": [
+    {
+      "id": 1,
+      "moodle_id": "MOODLE_PY101",
+      "title": "Python для начинающих",
+      "description": "Основы программирования на Python",
+      "category": "Программирование",
+      "duration_hours": 40,
+      "difficulty": "beginner",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=101"
+    },
+    {
+      "id": 2,
+      "moodle_id": "MOODLE_ML201",
+      "title": "Машинное обучение",
+      "description": "Введение в ML и нейронные сети",
+      "category": "Data Science",
+      "duration_hours": 60,
+      "difficulty": "intermediate",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=201"
+    },
+    {
+      "id": 3,
+      "moodle_id": "MOODLE_DJANGO301",
+      "title": "Веб-разработка Django",
+      "description": "Создание веб-приложений на Django",
+      "category": "Программирование",
+      "duration_hours": 50,
+      "difficulty": "intermediate",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=301"
+    },
+    {
+      "id": 4,
+      "moodle_id": "MOODLE_DB101",
+      "title": "Базы данных PostgreSQL",
+      "description": "Проектирование и оптимизация БД",
+      "category": "Базы данных",
+      "duration_hours": 35,
+      "difficulty": "beginner",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=401"
+    },
+    {
+      "id": 5,
+      "moodle_id": "MOODLE_ALG201",
+      "title": "Алгоритмы и структуры данных",
+      "description": "Основные алгоритмы и их применение",
+      "category": "Программирование",
+      "duration_hours": 45,
+      "difficulty": "intermediate",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=501"
+    },
+    {
+      "id": 6,
+      "moodle_id": "MOODLE_DOCKER101",
+      "title": "Docker и контейнеризация",
+      "description": "Работа с Docker и оркестрация",
+      "category": "DevOps",
+      "duration_hours": 30,
+      "difficulty": "intermediate",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=601"
+    },
+    {
+      "id": 7,
+      "moodle_id": "MOODLE_REACT301",
+      "title": "React и современный фронтенд",
+      "description": "Разработка интерфейсов на React",
+      "category": "Фронтенд",
+      "duration_hours": 55,
+      "difficulty": "intermediate",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=701"
+    },
+    {
+      "id": 8,
+      "moodle_id": "MOODLE_TEST101",
+      "title": "Тестирование ПО",
+      "description": "Unit-тесты, интеграционное тестирование",
+      "category": "Тестирование",
+      "duration_hours": 25,
+      "difficulty": "beginner",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=801"
+    },
+    {
+      "id": 9,
+      "moodle_id": "MOODLE_CV401",
+      "title": "Компьютерное зрение",
+      "description": "Обработка изображений и CV",
+      "category": "Data Science",
+      "duration_hours": 65,
+      "difficulty": "advanced",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=901"
+    },
+    {
+      "id": 10,
+      "moodle_id": "MOODLE_BLOCK201",
+      "title": "Блокчейн и криптовалюты",
+      "description": "Основы блокчейн технологий",
+      "category": "Блокчейн",
+      "duration_hours": 40,
+      "difficulty": "intermediate",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=1001"
+    },
+    {
+      "id": 11,
+      "moodle_id": "MOODLE_UX101",
+      "title": "UX/UI дизайн",
+      "description": "Проектирование пользовательских интерфейсов",
+      "category": "Дизайн",
+      "duration_hours": 35,
+      "difficulty": "beginner",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=1101"
+    },
+    {
+      "id": 12,
+      "moodle_id": "MOODLE_SEC201",
+      "title": "Кибербезопасность",
+      "description": "Основы информационной безопасности",
+      "category": "Безопасность",
+      "duration_hours": 50,
+      "difficulty": "intermediate",
+      "external_url": "https://moodle.urfu.ru/course/view.php?id=1201"
+    }
+  ]
+}
