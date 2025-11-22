@@ -22,6 +22,13 @@ class Course(models.Model):
     x_position = models.FloatField(default=0.0)
     y_position = models.FloatField(default=0.0)
     z_position = models.FloatField(default=0.0)
+    external_url = models.URLField(max_length=500, blank=True, null=True)
+    
+    area = models.CharField(max_length=100, blank=True, null=True)
+    thematic_tags = models.JSONField(default=list, blank=True, null=True)
+    categories_tags = models.JSONField(default=list, blank=True, null=True)
+    attributes = models.JSONField(default=list, blank=True, null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -39,6 +46,7 @@ class Trajectory(models.Model):
     name = models.CharField(max_length=255)
     trajectory_type = models.CharField(max_length=20, choices=TRAJECTORY_TYPE)
     teacher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_trajectories')
+    is_draft = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -48,19 +56,31 @@ class Trajectory(models.Model):
         return f"{self.name} - {self.student.username}"
 
 class TrajectoryCourse(models.Model):
+    POSITION_CHOICES = [
+        ('center', 'Центр (обязательный)'),
+        ('top', 'Верх (необязательный)'),
+        ('bottom', 'Низ (необязательный)'),
+    ]
+    
     trajectory = models.ForeignKey(Trajectory, on_delete=models.CASCADE, related_name='courses')
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    semester = models.IntegerField(default=1)
+    position = models.CharField(max_length=10, choices=POSITION_CHOICES, default='center')
     order = models.IntegerField(default=0)
     status = models.CharField(max_length=50, default='not_started')
     progress = models.IntegerField(default=0)
     
     class Meta:
         db_table = 'trajectory_courses'
-        ordering = ['order']
+        ordering = ['semester', 'position', 'order']
         unique_together = ['trajectory', 'course']
     
     def __str__(self):
         return f"{self.trajectory.name} - {self.course.title}"
+    
+    @property
+    def is_optional(self):
+        return self.position in ['top', 'bottom']
 
 class StudentProgress(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='progress')

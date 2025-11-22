@@ -4,8 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
+from django.views.decorators.http import require_http_methods
 from .models import User, Course, Trajectory, TrajectoryCourse, StudentProgress
-import math
+import json
 
 def register_view(request):
     if request.method == 'POST':
@@ -44,14 +45,8 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     user = request.user
-    
-    # Получаем все курсы для 3D визуализации
     courses = Course.objects.all()
-    
-    # Траектории пользователя
-    trajectories = Trajectory.objects.filter(student=user)
-    
-    # Прогресс студента
+    trajectories = Trajectory.objects.filter(student=user, is_draft=False)
     progress = StudentProgress.objects.filter(student=user)
     
     context = {
@@ -85,16 +80,22 @@ def trajectory_view(request, trajectory_id=None):
     if trajectory_id:
         trajectory = get_object_or_404(Trajectory, id=trajectory_id, student=user)
         trajectory_courses = TrajectoryCourse.objects.filter(trajectory=trajectory).select_related('course')
+        
+        courses_by_semester = {}
+        for tc in trajectory_courses:
+            if tc.semester not in courses_by_semester:
+                courses_by_semester[tc.semester] = {'center': [], 'top': [], 'bottom': []}
+            courses_by_semester[tc.semester][tc.position].append(tc)
     else:
         trajectory = None
-        trajectory_courses = []
+        courses_by_semester = {}
     
-    all_trajectories = Trajectory.objects.filter(student=user)
+    all_trajectories = Trajectory.objects.filter(student=user, is_draft=False)
     
     context = {
         'user': user,
         'trajectory': trajectory,
-        'trajectory_courses': trajectory_courses,
+        'courses_by_semester': courses_by_semester,
         'all_trajectories': all_trajectories,
     }
     
@@ -114,37 +115,88 @@ def api_courses(request):
     return JsonResponse({'courses': data})
 
 @login_required
-def create_trajectory(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        trajectory_type = request.POST.get('trajectory_type', 'personal')
+def trajectory_editor_view(request, trajectory_id=None):
+    if trajectory_id:
+        trajectory = get_object_or_404(Trajectory, id=trajectory_id, student=request.user, is_draft=True)
+        trajectory_courses = TrajectoryCourse.objects.filter(trajectory=trajectory).select_related('course')
         
+        existing_data = {}
+        for tc in trajectory_courses:
+            key = f"{tc.semester}_{tc.position}"
+            if key not in existing_data:
+                existing_data[key] = []
+            existing_data[key].append({
+                'course_id': tc.course.id,
+                'title': tc.course.title,
+                'category': tc.course.category,
+                'description': tc.course.description,
+                'order': tc.order
+            })
+    else:
+        trajectory = None
+        existing_data = {}
+    
+    all_courses = Course.objects.all().order_by('title')
+    
+    context = {
+        'trajectory': trajectory,
+        'all_courses': all_courses,
+        'existing_data': json.dumps(existing_data),
+    }
+    
+    return render(request, 'trajectory_editor.html', context)
+
+@login_required
+@require_http_methods(["POST"])
+def save_trajectory(request):
+    data = json.loads(request.body)
+    
+    trajectory_id = data.get('trajectory_id')
+    name = data.get('name')
+    courses_data = data.get('courses', [])
+    
+    if trajectory_id:
+        trajectory = get_object_or_404(Trajectory, id=trajectory_id, student=request.user)
+    else:
         trajectory = Trajectory.objects.create(
             student=request.user,
             name=name,
-            trajectory_type=trajectory_type
+            trajectory_type='personal',
+            is_draft=False
         )
-        
-        # Добавляем выбранные курсы
-        course_ids = request.POST.getlist('courses')
-        for idx, course_id in enumerate(course_ids):
-            course = Course.objects.get(id=course_id)
-            TrajectoryCourse.objects.create(
-                trajectory=trajectory,
-                course=course,
-                order=idx
-            )
-        
-        return redirect('trajectory', trajectory_id=trajectory.id)
     
-    courses = Course.objects.all()
-    return render(request, 'create_trajectory.html', {'courses': courses})
+    trajectory.name = name
+    trajectory.is_draft = False
+    trajectory.save()
+    
+    TrajectoryCourse.objects.filter(trajectory=trajectory).delete()
+    
+    for course_data in courses_data:
+        TrajectoryCourse.objects.create(
+            trajectory=trajectory,
+            course_id=course_data['course_id'],
+            semester=course_data['semester'],
+            position=course_data['position'],
+            order=course_data['order']
+        )
+    
+    return JsonResponse({'success': True, 'trajectory_id': trajectory.id})
+
+@login_required
+def create_trajectory_draft(request):
+    trajectory = Trajectory.objects.create(
+        student=request.user,
+        name='Новая траектория',
+        trajectory_type='personal',
+        is_draft=True
+    )
+    
+    return redirect('trajectory_editor', trajectory_id=trajectory.id)
 
 @login_required
 def course_view(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     
-    # Получаем или создаем прогресс пользователя для этого курса
     progress, created = StudentProgress.objects.get_or_create(
         student=request.user,
         course=course,
@@ -161,7 +213,6 @@ def course_view(request, course_id):
 def delete_trajectory(request, trajectory_id):
     trajectory = get_object_or_404(Trajectory, id=trajectory_id)
     
-    # Проверяем, что пользователь может удалять только свои траектории
     if trajectory.student != request.user and not request.user.is_staff:
         return HttpResponseForbidden("Вы не можете удалить эту траекторию")
     
