@@ -1,5 +1,0 @@
-**/yui/build/** -diff
-**/amd/build/** -diff
-**.js.map -diff
-**-min.js -diff
-**.min.js -diff

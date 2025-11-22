@@ -1,2 +1,0 @@
-configdndmedia,mod_label
-dndmedia,mod_label
